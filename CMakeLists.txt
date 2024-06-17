@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.10)
+set (CMAKE_CXX_STANDARD 11)
+project(jccc)
+add_compile_options(-O0 -Wall -Wpedantic -g -Wno-gnu-zero-variadic-macro-arguments)
+file(GLOB_RECURSE SOURCES src/*.c)
+add_executable(jccc ${SOURCES})
+target_include_directories(jccc PRIVATE src)
