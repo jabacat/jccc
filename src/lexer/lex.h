@@ -4,13 +4,20 @@
 
 #include "token.h"
 
+// The maximum number of tokens we can put back.
+#define TOKEN_PUTBACKS 5
+
 // This is a lexer structure, which will contain all of the information about
-// the state of a lexer. For now all we need is the file pointer which actually
-// has the data we need, but in the future we will need more.
+// the state of a lexer.
 typedef struct {
-    FILE * fp;
+    FILE * fp; // The file we are reading from.
+    Token unlexed[TOKEN_PUTBACKS];
+    unsigned unlexed_count;
 } Lexer;
 
 // Takes an open file pointer, and a token as input. It fills the token struct
 // with the next available token from the file.
 int lex(Lexer * l, Token * token);
+
+// Put a token back to be lexed again in the future.
+int unlex(Lexer * l, Token * token);
