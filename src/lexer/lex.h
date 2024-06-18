@@ -21,3 +21,6 @@ int lex(Lexer * l, Token * token);
 
 // Put a token back to be lexed again in the future.
 int unlex(Lexer * l, Token * token);
+
+// Jump to next token by skipping whitespace and comments (doesn't read it)
+int skip_to_token(Lexer *l);
