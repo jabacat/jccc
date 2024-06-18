@@ -30,3 +30,6 @@ TokenType ttype_many_chars(const char *contents);
 
 // Discern the token type from the given contents of unknown length
 TokenType ttype_from_string(const char *contents);
+
+// Jump to next token by skipping whitespace and comments (doesn't read it)
+int skip_to_token(Lexer *l);
