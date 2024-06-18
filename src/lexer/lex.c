@@ -60,11 +60,9 @@ TokenType ttype_many_chars(const char *contents) {
     }
 
     // Does it start with a negative sign
-    if (contents[0] != '\0') {
-        if (contents[0] == '-') {
-            return TT_IDENTIFIER;
-        }
-    }
+	if (contents[0] == '-') {
+		return TT_IDENTIFIER;
+	}
 
     // Loop through each character
     for (i = 0; contents[i] != '\0'; i++) {
@@ -91,7 +89,7 @@ TokenType ttype_many_chars(const char *contents) {
         }
 
         // Is it from "0123456789"?
-        if (c > 57 || c < 48 && c != 'u') {
+        if (c > '9' || c < '0' && c != 'u') {
             all_numeric = 0;
         }
 
