@@ -47,6 +47,8 @@ TokenType ttype_one_char(char c) {
 }
 
 TokenType ttype_many_chars(const char *contents) {
+	// TODO: Handle operations
+
     // Includes only numbers
     int all_numeric = 1;
 
