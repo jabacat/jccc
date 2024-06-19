@@ -26,13 +26,13 @@
 } while (0)
 
 #define PRINT_ERROR(msg, ...) \
-    PRINT_WITH_COLOR(CODE_RED, "Error: yfc: " msg "\n" ,##__VA_ARGS__)
+    PRINT_WITH_COLOR(CODE_RED, "Error: jccc: " msg "\n" ,##__VA_ARGS__)
 
 #define PRINT_WARNING(msg, ...) \
-    PRINT_WITH_COLOR(CODE_YELLOW, "Warning: yfc: " msg "\n" ,##__VA_ARGS__)
+    PRINT_WITH_COLOR(CODE_YELLOW, "Warning: jccc: " msg "\n" ,##__VA_ARGS__)
 
 #define PRINT_DEBUG(msg, ...) \
-    PRINT_WITH_COLOR(CODE_BLUE, "Debug: yfc: " msg "\n" ,##__VA_ARGS__)
+    PRINT_WITH_COLOR(CODE_BLUE, "Debug: jccc: " msg "\n" ,##__VA_ARGS__)
 
 #define PRINT_DEFAULT(msg, ...) \
-    PRINT_WITH_COLOR(CODE_WHITE, "yfc: " msg "\n" ,##__VA_ARGS__)
+    PRINT_WITH_COLOR(CODE_WHITE, "jccc: " msg "\n" ,##__VA_ARGS__)
