@@ -1,6 +1,7 @@
 #include "lex.h"
 
 #include <string.h> // memcpy
+#include <assert.h> // assert
 
 int lex(Lexer *l, Token *t) {
     // If there are any tokens waiting in the putback buffer, read from there
@@ -61,22 +62,12 @@ TokenType ttype_many_chars(const char *contents) {
         return TT_NO_TOKEN;
     }
 
-    // Does it start with a negative sign
-	if (contents[0] == '-') {
-		return TT_IDENTIFIER;
-	}
-
     // Loop through each character
     for (i = 0; contents[i] != '\0'; i++) {
         char c = contents[i];
 
         // If it has a period, it's a float
         if (c == '.') {
-            return TT_LITERAL;
-        }
-
-        // Count negative signs
-        if (c == '-') {
             return TT_LITERAL;
         }
 
@@ -130,4 +121,26 @@ TokenType ttype_from_string(const char *contents) {
     }
 
     return ttype_many_chars(contents);
+}
+
+int test_ttype_from_string() {
+	assert(ttype_from_string("1") == TT_LITERAL);
+	assert(ttype_from_string("1.2") == TT_LITERAL);
+
+	assert(ttype_from_string("1u") == TT_LITERAL);
+	assert(ttype_from_string("1.2f") == TT_LITERAL);
+	assert(ttype_from_string("1.f") == TT_LITERAL);
+
+	assert(ttype_from_string("\"Planck\"") == TT_LITERAL);
+	assert(ttype_from_string("'Language'") == TT_LITERAL);
+
+	assert(ttype_from_string("Jaba") == TT_IDENTIFIER);
+	assert(ttype_from_string("cat_") == TT_IDENTIFIER);
+
+	assert(ttype_from_string("(") == TT_OPAREN);
+	assert(ttype_from_string("}") == TT_CBRACE);
+
+	assert(ttype_from_string(";") == TT_SEMI);
+
+	return 0;
 }
