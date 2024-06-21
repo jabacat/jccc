@@ -31,6 +31,48 @@ int unlex(Lexer *l, Token *t) {
     return 0;
 }
 
+int skip_to_token(Lexer *l) {
+    char cur, prev;
+    int in_block = 0, pass = 0;
+
+    // Read the first character
+    if ((cur = fgetc(l->fp)) != EOF) {
+        prev = cur;
+        if (!(cur == ' ' || cur == '\t' || cur == '/')) {
+            fseek(l->fp, -1, SEEK_CUR);
+            return 0; // Token begins immediately
+        }
+    } else {
+        return -1; // File done, no more tokens
+    }
+
+    // Read each character from the file until EOF
+    while ((cur = fgetc(l->fp)) != EOF) {
+        if (cur == '/' && prev == '/' && in_block == 0) {
+            in_block = 1; // Single line comment
+        } else if (cur == '*' && prev == '/' && in_block == 0) {
+            in_block = 2; // Block comment
+            pass = 2;
+        } else if ((in_block == 1 && cur == '\n') || 
+                   (in_block == 2 && cur == '/' && prev == '*' && pass <= 0)) {
+            in_block = 0; // Out of comment
+        } else if (prev == '/' && !(cur == '*' || cur == '/') && in_block == 0) {
+            fseek(l->fp, -1, SEEK_CUR);
+            return 0; // Token was a slash without a * or / following it
+        }
+
+        if (!(cur == ' ' || cur == '\t' || cur == '/') && in_block == 0) {
+            fseek(l->fp, -1, SEEK_CUR);
+            return 0; // Token is next
+        }
+
+        pass -= 1;
+        prev = cur;
+    }
+
+    return -1; // EOF was reached
+}
+
 TokenType ttype_one_char(char c) {
     switch (c) {
     case '(':
