@@ -31,7 +31,7 @@ int skip_to_token(Lexer *l) {
     if ((cur = fgetc(l->fp)) != EOF) {
         prev = cur;
         if (!(cur == ' ' || cur == '\t' || cur == '/')) {
-            fseek(file, -1, SEEK_CUR);
+            fseek(l->fp, -1, SEEK_CUR);
             return 0; // token begins immediately
         }
     } else {
@@ -47,12 +47,12 @@ int skip_to_token(Lexer *l) {
         else if ((in_block == 1 && cur == '\n') || (in_block == 2 && cur == '/' && prev == '*'))
             in_block = 0; // out of comment
         else if (prev == '/' && !(cur == '*' || cur == '/')) {
-            fseek(file, -2, SEEK_CUR);
+            fseek(l->fp, -2, SEEK_CUR);
             return 0; // token was a slash without a * or / following it.
         }   
 
         if (!(cur == ' ' || cur == '\t' || cur == '/') && in_block == 0) {
-            fseek(file, -1, SEEK_CUR);
+            fseek(l->fp, -1, SEEK_CUR);
             return 0; // token is next
         }
         prev = cur;
