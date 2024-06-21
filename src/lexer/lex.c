@@ -3,6 +3,8 @@
 #include <string.h> // memcpy
 #include <assert.h> // assert
 
+#include <util/out.h> // error reporting
+
 int lex(Lexer *l, Token *t) {
     // If there are any tokens waiting in the putback buffer, read from there
     // instead.
@@ -18,7 +20,10 @@ int lex(Lexer *l, Token *t) {
 int unlex(Lexer *l, Token *t) {
     // First, make sure we can actually fit it in the buffer.
     if (l->unlexed_count >= TOKEN_PUTBACKS) {
-        // TODO: error reporting
+        PRINT_ERROR(
+            "internal: tried to unlex more than %d tokens at a time",
+            TOKEN_PUTBACKS
+        );
         return -1; // Error return code
     }
     memcpy(&l->unlexed[l->unlexed_count], t, sizeof(Token));
