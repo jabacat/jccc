@@ -16,6 +16,7 @@ typedef enum {
     TT_OBRACKET, // [
     TT_CBRACKET, // ]
     TT_SEMI, // ;
+    TT_NO_TOKEN, // Not a token
 } TokenType;
 
 // The maximum possible length of a token.

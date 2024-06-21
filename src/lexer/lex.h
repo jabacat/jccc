@@ -22,5 +22,14 @@ int lex(Lexer * l, Token * token);
 // Put a token back to be lexed again in the future.
 int unlex(Lexer * l, Token * token);
 
+// Find token type for single char
+TokenType ttype_one_char(char c);
+
+// Find token type for a char* with multiple characters
+TokenType ttype_many_chars(const char *contents);
+
+// Discern the token type from the given contents of unknown length
+TokenType ttype_from_string(const char *contents);
+
 // Jump to next token by skipping whitespace and comments (doesn't read it)
 int skip_to_token(Lexer *l);
