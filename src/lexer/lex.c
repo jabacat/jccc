@@ -40,9 +40,9 @@ int skip_to_token(Lexer *l) {
     // read each character from the file until EOF
     int in_block = 0;
     while ((cur = fgetc(l->fp)) != EOF) {
-        if (cur == prev && prev == '/')
+        if (cur == prev && prev == '/' && in_block == 0)
             in_block = 1; // single line
-        else if (cur == '*' && prev == '/')
+        else if (cur == '*' && prev == '/' && in_block == 0)
             in_block = 2; // block
         else if ((in_block == 1 && cur == '\n') || (in_block == 2 && cur == '/' && prev == '*'))
             in_block = 0; // out of comment
