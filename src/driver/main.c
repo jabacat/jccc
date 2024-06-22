@@ -3,19 +3,18 @@
  */
 
 #include <stdio.h>
+#include <string.h> // strcmp
 
 #include <lexer/lex.h>
 #include <util/out.h>
 
-#define TEST_FILE "tests/lextest.c"
+int lexer_dump(const char* filename) {
 
-int main(int argc, char **argv) {
-    
     // Initialization of everything
     Lexer lexer;
-    FILE * fp = fopen(TEST_FILE, "r");
+    FILE * fp = fopen(filename, "r");
     if (!fp) {
-        PRINT_ERROR("File %s not found", TEST_FILE);
+        PRINT_ERROR("File %s not found", filename);
         return 1;
     }
     lexer.fp = fp;
@@ -23,9 +22,45 @@ int main(int argc, char **argv) {
 
     Token t;
     do {
-        lex(&lexer, &t);
+        // Return if some non-zero (error) code is returned
+        if (lex(&lexer, &t)) return 1;
         printf("Contents: %20s, type: %20s\n", t.contents, ttype_name(t.type));
     } while (t.type != TT_EOF);
+
+    return 0;
+
+}
+
+int main(int argc, char **argv) {
+
+    // TODO -- move this out of main function, perhaps?
+
+    // Skip the name of the executable.
+    --argc, ++argv;
+    
+    if (argc == 0) {
+        PRINT_DEFAULT("Usage: --token-dump <filename> to see all tokens");
+        return 0;
+    }
+
+    if (argc == 1) {
+        PRINT_DEFAULT("default compilation not supported yet -- try 'jccc --token-dump %s' instead.", argv[0]);
+        return 1;
+    }
+
+    if (argc > 2) {
+        PRINT_DEFAULT("expected only two arguments!");
+        return 1;
+    }
+
+    // Two arguments now.
+    if (strcmp(argv[0], "--token-dump")) {
+        PRINT_ERROR("option %s not recognized.", argv[1]);
+        return 1;
+    }
+
+    // Finally, we can do the lexer test properly!
+    return lexer_dump(argv[1]);
 
     return 0;
 }
