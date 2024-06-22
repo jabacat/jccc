@@ -78,7 +78,7 @@ typedef enum {
 	TT_SIGNED, // signed
 	TT_STRUCT, // struct
 	TT_SIZEOF, // sizeof
-	TT_typedef, // typedef
+	TT_TYPEDEF, // typedef
 	TT_UNSIGNED, // unsigned
 	TT_UNION, // union
 	TT_VOID, // void
