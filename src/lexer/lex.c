@@ -31,7 +31,7 @@ int lex(Lexer *l, Token *t) {
         return 0;
     }
 
-    // TODO: skip all whitespace (waiting on #17)
+    skip_to_token(l->fp);
     // Get initial character
     int init = getc(l->fp);
 
