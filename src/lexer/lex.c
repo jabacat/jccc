@@ -1,8 +1,8 @@
 #include "lex.h"
 
+#include <assert.h> // assert
 #include <ctype.h>
 #include <string.h> // memcpy
-#include <assert.h> // assert
 
 #define STREQ(a, b) (!strcmp((a), (b)))
 
@@ -10,7 +10,7 @@
 
 // Is a character in the given string?
 int in_string(char c, char s[]) {
-    for (char* d = s; *d; ++d) {
+    for (char *d = s; *d; ++d) {
         if (*d == c)
             return 1;
     }
@@ -100,7 +100,8 @@ int lex(Lexer *l, Token *t) {
                 break;
             // OOB check
             if (pos >= TOKEN_LENGTH - 1) {
-                PRINT_ERROR("identifier too long, over %d characters", TOKEN_LENGTH);
+                PRINT_ERROR("identifier too long, over %d characters",
+                            TOKEN_LENGTH);
                 PRINT_ERROR("identifier began with the following:");
                 PRINT_ERROR("%.*s", TOKEN_LENGTH, t->contents);
                 return -1;
@@ -118,7 +119,6 @@ int lex(Lexer *l, Token *t) {
     // TODO - parse character or string literal
 
     return 0;
-
 }
 
 int unlex(Lexer *l, Token *t) {
@@ -155,10 +155,11 @@ int skip_to_token(Lexer *l) {
         } else if (cur == '*' && prev == '/' && in_block == 0) {
             in_block = 2; // Block comment
             pass = 2;
-        } else if ((in_block == 1 && cur == '\n') || 
+        } else if ((in_block == 1 && cur == '\n') ||
                    (in_block == 2 && cur == '/' && prev == '*' && pass <= 0)) {
             in_block = 0; // Out of comment
-        } else if (prev == '/' && !(cur == '*' || cur == '/') && in_block == 0) {
+        } else if (prev == '/' && !(cur == '*' || cur == '/') &&
+                   in_block == 0) {
             fseek(l->fp, -1, SEEK_CUR);
             return 0; // Token was a slash without a * or / following it
         }
@@ -191,6 +192,38 @@ TokenType ttype_one_char(char c) {
         return TT_CBRACKET; // ]
     case ';':
         return TT_SEMI; // ;
+    case '.':
+        return TT_PERIOD; // .
+    case ',':
+        return TT_COMMA; // ,
+    case '-':
+        return TT_MINUS; // -
+    case '+':
+        return TT_PLUS; // +
+    case '*':
+        return TT_STAR; // *
+    case '/':
+        return TT_SLASH; // /
+    case '=':
+        return TT_ASSIGN; // =
+    case ':':
+        return TT_COLON; // :
+    case '%':
+        return TT_MOD; // %
+    case '&':
+        return TT_BAND; // &
+    case '|':
+        return TT_BOR; // |
+    case '>':
+        return TT_GREATER; // >
+    case '<':
+        return TT_LESS; // <
+    case '!':
+        return TT_LNOT; // !
+    case '~':
+        return TT_BNOT; // ~
+    case '^':
+        return TT_XOR; // ^
     }
 
     return TT_NO_TOKEN;
@@ -261,9 +294,51 @@ TokenType ttype_many_chars(const char *contents) {
         return TT_SIZEOF;
     } else if (STREQ(contents, "while")) {
         return TT_WHILE;
+    } else if (STREQ(contents, "&&")) {
+        return TT_LAND;
+    } else if (STREQ(contents, "||")) {
+        return TT_LOR;
+    } else if (STREQ(contents, "-=")) {
+        return TT_DEC;
+    } else if (STREQ(contents, "+=")) {
+        return TT_INC;
+    } else if (STREQ(contents, "++")) {
+        return TT_PLUSPLUS;
+    } else if (STREQ(contents, "--")) {
+        return TT_MINUSMINUS;
+    } else if (STREQ(contents, "/=")) {
+        return TT_DIVEQ;
+    } else if (STREQ(contents, "*=")) {
+        return TT_MULEQ;
+    } else if (STREQ(contents, "%=")) {
+        return TT_MODEQ;
+    } else if (STREQ(contents, "&=")) {
+        return TT_BANDEQ;
+    } else if (STREQ(contents, "|=")) {
+        return TT_BOREQ;
+    } else if (STREQ(contents, "&&=")) {
+        return TT_LANDEQ;
+    } else if (STREQ(contents, "||=")) {
+        return TT_LOREQ;
+    } else if (STREQ(contents, "<=")) {
+        return TT_LESSEQ;
+    } else if (STREQ(contents, ">=")) {
+        return TT_GREATEREQ;
+    } else if (STREQ(contents, "<<")) {
+        return TT_LEFTSHIFT;
+    } else if (STREQ(contents, ">>")) {
+        return TT_RIGHTSHIFT;
+    } else if (STREQ(contents, "==")) {
+        return TT_EQUALS;
+    } else if (STREQ(contents, "^=")) {
+        return TT_XOREQ;
+    } else if (STREQ(contents, "->")) {
+        return TT_POINT;
+    } else if (STREQ(contents, "<<=")) {
+        return TT_LEFTSHIFTEQUALS;
+    } else if (STREQ(contents, ">>=")) {
+        return TT_RIGHTSHIFTEQUALS;
     }
-
-    // TODO: Handle operations
 
     // Includes only numbers
     int all_numeric = 1;
@@ -338,24 +413,93 @@ TokenType ttype_from_string(const char *contents) {
     return ttype_many_chars(contents);
 }
 
-static const char* ttype_names[] = {
-    "literal", // a quote, integer, floating-point thing, etc.
-    "identifier", // an identifier, including user-defined types!
-    "open paren", // (
-    "close paren", // )
-    "open brace", // {
-    "close brace", // }
-    "open bracket", // [
+static const char *ttype_names[] = {
+    "literal",       // a quote, integer, floating-point thing, etc.
+    "identifier",    // an identifier, including user-defined types!
+    "open paren",    // (
+    "close paren",   // )
+    "open brace",    // {
+    "close brace",   // }
+    "open bracket",  // [
     "close bracket", // ]
-    "semicolon", // ;
-    "no token", // Not a token
-    "end of file", // End-of-file, so we can lex until we hit the end of the file
-    "newline", // Newline, used in preprocessing
+    "semicolon",     // ;
+    "no token",      // Not a token
+    "end of file",   // End-of-file, lex until we hit the end of the file
+    "newline",       // Newline, used in preprocessing
+    ".",
+    ",",
+    "-",
+    "+",
+    "*",
+    "/",
+    "=",
+    ":",
+    "%",
+    "&",
+    "&&",
+    "|",
+    "||",
+    "-=",
+    "+=",
+    "++",
+    "--",
+    "/=",
+    "*=",
+    "%=",
+    "&=",
+    "|=",
+    "&&=",
+    "||=",
+    ">",
+    "<",
+    "<=",
+    ">=",
+    "<<",
+    ">>",
+    "!",
+    "~",
+    "==",
+    "^",
+    "^=",
+    "->",
+    "<<=",
+    ">>=",
+	// All 32 C keywords
+    "auto",
+    "break",
+    "char",
+    "const",
+    "case",
+    "continue",
+    "double",
+    "do",
+    "default",
+    "enum",
+    "else",
+    "extern",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "int",
+    "long",
+    "return",
+    "register",
+    "static",
+    "switch",
+    "short",
+    "signed",
+    "struct",
+    "sizeof",
+    "typedef",
+    "unsigned",
+    "union",
+    "void",
+    "volitile",
+    "while",
 };
 
-const char* ttype_name(TokenType tt) {
-    return ttype_names[tt];
-}
+const char *ttype_name(TokenType tt) { return ttype_names[tt]; }
 
 int test_ttype_from_string() {
     assert(ttype_from_string("1") == TT_LITERAL);
