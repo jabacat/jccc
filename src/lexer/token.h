@@ -17,6 +17,8 @@ typedef enum {
     TT_CBRACKET, // ]
     TT_SEMI, // ;
     TT_NO_TOKEN, // Not a token
+    TT_EOF, // End-of-file, so we can lex until we hit the end of the file
+    TT_NEWLINE, // Newline, used in preprocessing
 } TokenType;
 
 // The maximum possible length of a token.

@@ -33,3 +33,7 @@ TokenType ttype_from_string(const char *contents);
 
 // Jump to next token by skipping whitespace and comments (doesn't read it)
 int skip_to_token(Lexer *l);
+
+// Get the string representation of a token type.
+// E.g. TT_EOF -> "end of file", TT_LITERAL -> "literal", etc.
+const char* ttype_name(TokenType tt);
