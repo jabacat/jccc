@@ -31,7 +31,7 @@ int lex(Lexer *l, Token *t) {
         return 0;
     }
 
-    skip_to_token(l->fp);
+    skip_to_token(l);
     // Get initial character
     int init = getc(l->fp);
 
@@ -106,6 +106,7 @@ int lex(Lexer *l, Token *t) {
             t->contents[pos++] = c;
         }
         // We've ended!
+        ungetc(c, l->fp);
         t->contents[pos] = '\0';
         t->type = ttype_many_chars(t->contents);
         t->length = pos;
@@ -230,7 +231,7 @@ TokenType ttype_many_chars(const char *contents) {
         }
 
         // Is it from "0123456789"?
-        if (c > '9' || c < '0' && c != 'u') {
+        if ((c > '9' || c < '0') && c != 'u') {
             all_numeric = 0;
         }
 
