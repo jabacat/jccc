@@ -1,9 +1,26 @@
 #include "lex.h"
 
+#include <ctype.h>
 #include <string.h> // memcpy
 #include <assert.h> // assert
 
 #include <util/out.h> // error reporting
+
+// Is a character in the given string?
+int in_string(char c, char s[]) {
+    for (char* d = s; *d; ++d) {
+        if (*d == c)
+            return 1;
+    }
+    return 0;
+}
+
+// We will need to add more of these later, for sure
+char single_char_tokens[] = "(){}[];";
+
+int is_valid_numeric_or_id_char(char c) {
+    return isalnum(c) || (c == '_') || (c == '.');
+}
 
 int lex(Lexer *l, Token *t) {
     // If there are any tokens waiting in the putback buffer, read from there
@@ -13,8 +30,92 @@ int lex(Lexer *l, Token *t) {
         memcpy(t, &l->unlexed[l->unlexed_count], sizeof(Token));
         return 0;
     }
-    // Now, do the actual lexing: TODO!
+
+    // TODO: skip all whitespace (waiting on #17)
+    // Get initial character
+    int init = getc(l->fp);
+
+    // Clear memory and initialize
+    memset(t->contents, 0, TOKEN_LENGTH);
+
+    // First important check -- have we reached the end of the file?
+    static char eof[] = "[end of file]";
+    if (init == EOF) {
+        strcpy(t->contents, eof);
+        t->length = strlen(eof);
+        t->type = TT_EOF;
+        return 0;
+    }
+
+    // Second important check -- are we somehow reading a whitespace character?
+    // Not good if so -- report internal error
+    if (init == ' ' || init == '\t') {
+        PRINT_ERROR("internal error: did not skip whitespace correctly");
+        return -1;
+    }
+
+    // Last check -- is this a newline?
+    static char nline[] = "[newline]";
+    if (init == '\n') {
+        strcpy(t->contents, nline);
+        t->length = strlen(nline);
+        t->type = TT_NEWLINE;
+        return 0;
+    }
+
+    // Which position are we writing into?
+    int pos = 0;
+    // Copy the initial character into the token buffer
+    t->contents[pos++] = init;
+
+    /**
+     * Because dealing with what type a token is, is not in the scope of this
+     * function, we notice that given the initial character of a token, we can
+     * immediately tell what character(s) will end said token.
+     * For example, if a token begins with an alphabetic character, we read
+     * characters until we hit a character that isn't alphanumeric or an
+     * underscore.
+     * This works for the most part, except that for quote literals we need to
+     * make sure the ending quote we hit isn't preceded by a backslash.
+     */
+
+    // First up, we can just end here.
+    if (in_string(init, single_char_tokens)) {
+        t->length = pos;
+        t->type = ttype_one_char(init);
+        return 0;
+    }
+
+    // LEXING NUMERIC LITERAL OR IDENTIFIER
+    // If it starts with an alphanumeric character or an underscore, search
+    // until we hit something which isn't.
+    int c;
+    if (is_valid_numeric_or_id_char(init)) {
+        for (;;) {
+            c = getc(l->fp);
+            // If not alphanumeric or underscore, skip to end
+            if (!is_valid_numeric_or_id_char(c))
+                break;
+            // OOB check
+            if (pos >= TOKEN_LENGTH - 1) {
+                PRINT_ERROR("identifier too long, over %d characters", TOKEN_LENGTH);
+                PRINT_ERROR("identifier began with the following:");
+                PRINT_ERROR("%.*s", TOKEN_LENGTH, t->contents);
+                return -1;
+            }
+            t->contents[pos++] = c;
+        }
+        // We've ended!
+        t->contents[pos] = '\0';
+        t->type = ttype_many_chars(t->contents);
+        t->length = pos;
+        return 0;
+    }
+
+    // TODO - parse character or string literal
+
     return 0;
+
 }
 
 int unlex(Lexer *l, Token *t) {
