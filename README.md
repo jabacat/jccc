@@ -7,3 +7,8 @@ A C compiler and preprocessor written from scratch in C that targets x86-64 asse
 
 Make sure you have `cmake` installed on your machine, then run
 `./scripts/build.sh`. Then, you can run JCCC with `./build/jccc`.
+
+## Usage
+
+Only lexing is supported at this stage. To lex, run the following:
+`jccc --token-dump <filename>`
