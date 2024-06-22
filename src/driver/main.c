@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     Token t;
     do {
         lex(&lexer, &t);
-        printf("%s\n", t.contents);
+        printf("Contents: %20s, type: %20s\n", t.contents, ttype_name(t.type));
     } while (t.type != TT_EOF);
 
     return 0;

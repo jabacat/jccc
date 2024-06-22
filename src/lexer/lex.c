@@ -272,6 +272,25 @@ TokenType ttype_from_string(const char *contents) {
     return ttype_many_chars(contents);
 }
 
+static const char* ttype_names[] = {
+    "literal", // a quote, integer, floating-point thing, etc.
+    "identifier", // an identifier, including user-defined types!
+    "open paren", // (
+    "close paren", // )
+    "open brace", // {
+    "close brace", // }
+    "open bracket", // [
+    "close bracket", // ]
+    "semicolon", // ;
+    "no token", // Not a token
+    "end of file", // End-of-file, so we can lex until we hit the end of the file
+    "newline", // Newline, used in preprocessing
+};
+
+const char* ttype_name(TokenType tt) {
+    return ttype_names[tt];
+}
+
 int test_ttype_from_string() {
 	assert(ttype_from_string("1") == TT_LITERAL);
 	assert(ttype_from_string("1.2") == TT_LITERAL);
