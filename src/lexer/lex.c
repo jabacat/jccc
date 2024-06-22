@@ -1,7 +1,9 @@
 #include "lex.h"
 
-#include <string.h> // memcpy
 #include <assert.h> // assert
+#include <string.h> // memcpy
+
+#define STREQ(a, b) (!strcmp((a), (b)))
 
 #include <util/out.h> // error reporting
 
@@ -20,10 +22,8 @@ int lex(Lexer *l, Token *t) {
 int unlex(Lexer *l, Token *t) {
     // First, make sure we can actually fit it in the buffer.
     if (l->unlexed_count >= TOKEN_PUTBACKS) {
-        PRINT_ERROR(
-            "internal: tried to unlex more than %d tokens at a time",
-            TOKEN_PUTBACKS
-        );
+        PRINT_ERROR("internal: tried to unlex more than %d tokens at a time",
+                    TOKEN_PUTBACKS);
         return -1; // Error return code
     }
     memcpy(&l->unlexed[l->unlexed_count], t, sizeof(Token));
@@ -53,7 +53,73 @@ TokenType ttype_one_char(char c) {
 }
 
 TokenType ttype_many_chars(const char *contents) {
-	// TODO: Handle operations
+    if (STREQ(contents, "auto")) {
+        return TT_AUTO;
+    } else if (STREQ(contents, "break")) {
+        return TT_BREAK;
+    } else if (STREQ(contents, "continue")) {
+        return TT_CONTINUE;
+    } else if (STREQ(contents, "const")) {
+        return TT_CONST;
+    } else if (STREQ(contents, "case")) {
+        return TT_CASE;
+    } else if (STREQ(contents, "char")) {
+        return TT_CHAR;
+    } else if (STREQ(contents, "do")) {
+        return TT_DO;
+    } else if (STREQ(contents, "double")) {
+        return TT_DOUBLE;
+    } else if (STREQ(contents, "default")) {
+        return TT_DEFAULT;
+    } else if (STREQ(contents, "enum")) {
+        return TT_ENUM;
+    } else if (STREQ(contents, "else")) {
+        return TT_ELSE;
+    } else if (STREQ(contents, "extern")) {
+        return TT_EXTERN;
+    } else if (STREQ(contents, "float")) {
+        return TT_FLOAT;
+    } else if (STREQ(contents, "for")) {
+        return TT_FOR;
+    } else if (STREQ(contents, "goto")) {
+        return TT_GOTO;
+    } else if (STREQ(contents, "int")) {
+        return TT_INT;
+    } else if (STREQ(contents, "if")) {
+        return TT_IF;
+    } else if (STREQ(contents, "long")) {
+        return TT_LONG;
+    } else if (STREQ(contents, "return")) {
+        return TT_RETURN;
+    } else if (STREQ(contents, "register")) {
+        return TT_REGISTER;
+    } else if (STREQ(contents, "struct")) {
+        return TT_STRUCT;
+    } else if (STREQ(contents, "signed")) {
+        return TT_SIGNED;
+    } else if (STREQ(contents, "sizeof")) {
+        return TT_SIZEOF;
+    } else if (STREQ(contents, "static")) {
+        return TT_STATIC;
+    } else if (STREQ(contents, "short")) {
+        return TT_SHORT;
+    } else if (STREQ(contents, "switch")) {
+        return TT_SWITCH;
+    } else if (STREQ(contents, "typedef")) {
+        return TT_TYPEDEF;
+    } else if (STREQ(contents, "union")) {
+        return TT_UNION;
+    } else if (STREQ(contents, "unsigned")) {
+        return TT_UNSIGNED;
+    } else if (STREQ(contents, "void")) {
+        return TT_SIZEOF;
+    } else if (STREQ(contents, "volitile")) {
+        return TT_SIZEOF;
+    } else if (STREQ(contents, "while")) {
+        return TT_WHILE;
+    }
+
+    // TODO: Handle operations
 
     // Includes only numbers
     int all_numeric = 1;
@@ -129,23 +195,23 @@ TokenType ttype_from_string(const char *contents) {
 }
 
 int test_ttype_from_string() {
-	assert(ttype_from_string("1") == TT_LITERAL);
-	assert(ttype_from_string("1.2") == TT_LITERAL);
+    assert(ttype_from_string("1") == TT_LITERAL);
+    assert(ttype_from_string("1.2") == TT_LITERAL);
 
-	assert(ttype_from_string("1u") == TT_LITERAL);
-	assert(ttype_from_string("1.2f") == TT_LITERAL);
-	assert(ttype_from_string("1.f") == TT_LITERAL);
+    assert(ttype_from_string("1u") == TT_LITERAL);
+    assert(ttype_from_string("1.2f") == TT_LITERAL);
+    assert(ttype_from_string("1.f") == TT_LITERAL);
 
-	assert(ttype_from_string("\"Planck\"") == TT_LITERAL);
-	assert(ttype_from_string("'Language'") == TT_LITERAL);
+    assert(ttype_from_string("\"Planck\"") == TT_LITERAL);
+    assert(ttype_from_string("'Language'") == TT_LITERAL);
 
-	assert(ttype_from_string("Jaba") == TT_IDENTIFIER);
-	assert(ttype_from_string("cat_") == TT_IDENTIFIER);
+    assert(ttype_from_string("Jaba") == TT_IDENTIFIER);
+    assert(ttype_from_string("cat_") == TT_IDENTIFIER);
 
-	assert(ttype_from_string("(") == TT_OPAREN);
-	assert(ttype_from_string("}") == TT_CBRACE);
+    assert(ttype_from_string("(") == TT_OPAREN);
+    assert(ttype_from_string("}") == TT_CBRACE);
 
-	assert(ttype_from_string(";") == TT_SEMI);
+    assert(ttype_from_string(";") == TT_SEMI);
 
-	return 0;
+    return 0;
 }
