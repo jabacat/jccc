@@ -1,4 +1,5 @@
 #include <assert.h>
 
-// TODO: Make custom assert that does not call quit
-#define tassert(e) assert(e)
+#define tassert(e) ((void)((e) ? 0 : __assert(#e, __FILE__, __LINE__)))
+#define __assert(e, file, line)                                                \
+    ((void)printf("%s:%u: failed assertion `%s'\n", file, line, e), 0)
