@@ -1,6 +1,6 @@
 #include "lex.h"
+#include <testing/tassert.h> // tassert
 
-#include <assert.h> // assert
 #include <ctype.h>
 #include <string.h> // memcpy
 
@@ -464,7 +464,7 @@ static const char *ttype_names[] = {
     "->",
     "<<=",
     ">>=",
-	// All 32 C keywords
+    // All 32 C keywords
     "auto",
     "break",
     "char",
@@ -502,23 +502,23 @@ static const char *ttype_names[] = {
 const char *ttype_name(TokenType tt) { return ttype_names[tt]; }
 
 int test_ttype_from_string() {
-    assert(ttype_from_string("1") == TT_LITERAL);
-    assert(ttype_from_string("1.2") == TT_LITERAL);
+    tassert(ttype_from_string("1") == TT_LITERAL);
+    tassert(ttype_from_string("1.2") == TT_LITERAL);
 
-    assert(ttype_from_string("1u") == TT_LITERAL);
-    assert(ttype_from_string("1.2f") == TT_LITERAL);
-    assert(ttype_from_string("1.f") == TT_LITERAL);
+    tassert(ttype_from_string("1u") == TT_LITERAL);
+    tassert(ttype_from_string("1.2f") == TT_LITERAL);
+    tassert(ttype_from_string("1.f") == TT_LITERAL);
 
-    assert(ttype_from_string("\"Planck\"") == TT_LITERAL);
-    assert(ttype_from_string("'Language'") == TT_LITERAL);
+    tassert(ttype_from_string("\"Planck\"") == TT_LITERAL);
+    tassert(ttype_from_string("'Language'") == TT_LITERAL);
 
-    assert(ttype_from_string("Jaba") == TT_IDENTIFIER);
-    assert(ttype_from_string("cat_") == TT_IDENTIFIER);
+    tassert(ttype_from_string("Jaba") == TT_IDENTIFIER);
+    tassert(ttype_from_string("cat_") == TT_IDENTIFIER);
 
-    assert(ttype_from_string("(") == TT_OPAREN);
-    assert(ttype_from_string("}") == TT_CBRACE);
+    tassert(ttype_from_string("(") == TT_OPAREN);
+    tassert(ttype_from_string("}") == TT_CBRACE);
 
-    assert(ttype_from_string(";") == TT_SEMI);
+    tassert(ttype_from_string(";") == TT_SEMI);
 
     return 0;
 }
