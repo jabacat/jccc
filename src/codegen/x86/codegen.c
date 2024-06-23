@@ -1,5 +1,11 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "codegen.h"
+
+#include <testing/tassert.h> // tassert
 
 struct GenState {
     // Each bit corresponds with a registers 0-31 where the LSB is 0
@@ -57,8 +63,18 @@ add rsp, 32";
 char *init_int_literal(int val) {
     GEN_STATE.rsp_offset += 8;
 
-    static char init[256];
-    sprintf(init, "mov [rsp+%d] %d", GEN_STATE.rsp_offset, val);
+    char *init;
+    init = (char *)malloc(256 * sizeof(char));
+    sprintf(init, "mov [rsp+%d], %d", GEN_STATE.rsp_offset, val);
 
     return init;
+}
+
+int test_init_int_literal() {
+	testing_func_setup();
+    code_gen_init();
+
+    tassert(strcmp(init_int_literal(100), "mov [rsp+8], 100") == 0);
+
+	return 0;
 }
