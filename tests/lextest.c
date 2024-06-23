@@ -9,7 +9,6 @@
 	;
 	}
 	[end of file]
-(well, plus or minus some newlines.)
 */
 int main() {
 	return 0;
