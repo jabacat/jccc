@@ -1,3 +1,18 @@
+#include <stdint.h>
+#include <stdio.h>
+
+struct GenState {
+    // Each bit corresponds with a registers 0-31 where the LSB is 0
+    uint32_t registers_in_use;
+
+    unsigned int rsp_offset;
+} GEN_STATE;
+
+void code_gen_init() {
+    GEN_STATE.registers_in_use = 0;
+    GEN_STATE.rsp_offset = 0;
+}
+
 char *start_main() {
     static char start[256] = "\
 global _start\
@@ -37,4 +52,13 @@ mov r15, [rsp+24]\
 add rsp, 32";
 
     return end;
+}
+
+char *init_int_literal(int val) {
+    GEN_STATE.rsp_offset += 8;
+
+    static char init[256];
+    sprintf(init, "mov [rsp+%d] %d", GEN_STATE.rsp_offset, val);
+
+    return init;
 }
