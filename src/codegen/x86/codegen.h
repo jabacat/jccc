@@ -1,3 +1,5 @@
+#pragma once
+
 char *start_main();
 
 char *end_main();

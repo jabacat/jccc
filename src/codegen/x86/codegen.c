@@ -62,3 +62,12 @@ char *init_int_literal(int val) {
 
     return init;
 }
+
+char *add(int val) {
+    GEN_STATE.rsp_offset += 8;
+
+    static char init[256];
+    sprintf(init, "mov [rsp+%d] %d", GEN_STATE.rsp_offset, val);
+
+    return init;
+}

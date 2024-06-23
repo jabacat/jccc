@@ -1,3 +1,5 @@
+#pragma once
+
 /* Testing utility
  * Here is an example usage of the testing
  *
