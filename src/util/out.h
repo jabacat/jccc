@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <stdio.h> // stderr
+
 // All of the color codes.
 #define CODE_RED 31
 #define CODE_YELLOW 33
