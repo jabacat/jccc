@@ -1,4 +1,6 @@
 #include "lex.h"
+#include "token.h"
+#include <stdio.h>
 #include <testing/tassert.h> // tassert
 
 #include <ctype.h>
@@ -66,12 +68,16 @@ int real_lex(Lexer *l, Token *t) {
     // Clear memory and initialize
     memset(t->contents, 0, TOKEN_LENGTH);
 
+    // Set sourcefile
+    memcpy(t->source_file, &l->current_file, TOKEN_LENGTH);
+
     // First important check -- have we reached the end of the file?
     static char eof[] = "[end of file]";
     if (init == EOF) {
         strcpy(t->contents, eof);
         t->length = strlen(eof);
         t->type = TT_EOF;
+        t->position_in_file = ftell(l->fp);
         return 0;
     }
 
@@ -88,6 +94,7 @@ int real_lex(Lexer *l, Token *t) {
         strcpy(t->contents, nline);
         t->length = strlen(nline);
         t->type = TT_NEWLINE;
+        t->position_in_file = ftell(l->fp);
         return 0;
     }
 
@@ -111,6 +118,7 @@ int real_lex(Lexer *l, Token *t) {
     if (in_string(init, single_char_tokens)) {
         t->length = pos;
         t->type = ttype_one_char(init);
+        t->position_in_file = ftell(l->fp);
         return 0;
     }
 
@@ -118,7 +126,9 @@ int real_lex(Lexer *l, Token *t) {
     // If it starts with an alphanumeric character or an underscore, search
     // until we hit something which isn't.
     int c;
+    long starting_pos;
     if (is_valid_numeric_or_id_char(init)) {
+        starting_pos = ftell(l->fp);
         for (;;) {
             c = getc(l->fp);
             // If not alphanumeric or underscore, skip to end
@@ -139,6 +149,7 @@ int real_lex(Lexer *l, Token *t) {
         t->contents[pos] = '\0';
         t->type = ttype_many_chars(t->contents);
         t->length = pos;
+        t->position_in_file = starting_pos;
         return 0;
     }
 
@@ -189,7 +200,6 @@ int skip_to_token(Lexer *l) {
             fseek(l->fp, -1, SEEK_CUR);
             return 0; // Token was a slash without a * or / following it
         }
-
         if (!(cur == ' ' || cur == '\t' || cur == '/') && in_block == 0) {
             fseek(l->fp, -1, SEEK_CUR);
             return 0; // Token is next

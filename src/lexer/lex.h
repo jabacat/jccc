@@ -11,6 +11,7 @@
 // the state of a lexer.
 typedef struct {
     FILE *fp; // The file we are reading from.
+    char current_file[TOKEN_LENGTH]; // The name of source file we are reading from.
     Token unlexed[TOKEN_PUTBACKS];
     unsigned unlexed_count;
 } Lexer;

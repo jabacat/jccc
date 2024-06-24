@@ -97,7 +97,9 @@ typedef enum {
 #define TOKEN_LENGTH 256
 
 typedef struct {
-    TokenType type;              // What type of token this is.
-    char contents[TOKEN_LENGTH]; // The actual contents of the token.
-    unsigned length;             // How long the token is.
+    TokenType type;                 // What type of token this is.
+    char contents[TOKEN_LENGTH];    // The actual contents of the token.
+    unsigned length;                // How long the token is.
+    char source_file[TOKEN_LENGTH]; // The source file the token was in.
+    long position_in_file;           // Where in the file the token started, as an index.
 } Token;
