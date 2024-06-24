@@ -166,6 +166,8 @@ int real_lex(Lexer *l, Token *t) {
     }
 
     // TODO - parse character or string literal
+
+    PRINT_ERROR("lexer unable to identify token starting with: %c", init);
     return 0;
 }
 
