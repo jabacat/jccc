@@ -1,5 +1,6 @@
 #include "lex.h"
 #include <testing/tassert.h> // tassert
+#include <testing/test_utils.h>
 
 #include <ctype.h>
 #include <string.h> // memcpy
@@ -528,6 +529,8 @@ static const char *ttype_names[] = {
 const char *ttype_name(TokenType tt) { return ttype_names[tt]; }
 
 int test_ttype_from_string() {
+    testing_func_setup();
+
     tassert(ttype_from_string("1") == TT_LITERAL);
     tassert(ttype_from_string("1.2") == TT_LITERAL);
 
