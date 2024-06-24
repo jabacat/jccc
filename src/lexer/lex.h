@@ -13,7 +13,7 @@ typedef struct {
     FILE *fp; // The file we are reading from.
     char current_file[TOKEN_LENGTH]; // The name of source file we are reading from.
     char buffer[1]; // A buffer so that chars can be "put back"
-    int position; // The posistion of the file pointer in the current file in characters from the start
+    long position; // The posistion of the file pointer in the current file in characters from the start
     Token unlexed[TOKEN_PUTBACKS];
     unsigned unlexed_count;
 } Lexer;
