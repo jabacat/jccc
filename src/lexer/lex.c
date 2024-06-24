@@ -24,7 +24,33 @@ int is_valid_numeric_or_id_char(char c) {
     return isalnum(c) || (c == '_') || (c == '.');
 }
 
-int lex(Lexer *l, Token *t) {
+int real_lex(Lexer*, Token*);
+
+/**
+ * This produces a list of tokens after having been processed by the 
+ * preprocessor. For example, if the code is
+ * #define MAX_ARRAY 5
+ * int arr[MAX_ARRAY];
+ * then this function will return
+ * int
+ * arr
+ * [
+ * 5
+ * ]
+ * ;
+ */
+int lex(Lexer* l, Token* t) {
+    // For now, all we need to do is skip newlines
+    for (;;) {
+        real_lex(l, t);
+        if (t->type != TT_NEWLINE)
+            break;
+    }
+    return 0;
+}
+
+// This actually grabs the next token, independent of any preprocessor things.
+int real_lex(Lexer *l, Token *t) {
     // If there are any tokens waiting in the putback buffer, read from there
     // instead.
     if (l->unlexed_count > 0) {
