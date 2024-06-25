@@ -259,10 +259,6 @@ TokenType ttype_one_char(char c) {
 
 // This is a function for parsing exclusively tokens with more than one char
 TokenType ttype_many_chars(const char *contents) {
-	if (strlen(contents) == 1) {
-        PRINT_ERROR("Please use ttype_from_string instead of ttype_many_chars for general use of tokenizing");
-	}
-
     if (STREQ(contents, "auto")) {
         return TT_AUTO;
     } else if (STREQ(contents, "break")) {
@@ -534,6 +530,42 @@ static const char *ttype_names[] = {
 };
 
 const char *ttype_name(TokenType tt) { return ttype_names[tt]; }
+
+int test_ttype_many_chars() {
+    testing_func_setup();
+
+    tassert(ttype_many_chars("foo") == TT_IDENTIFIER);
+    tassert(ttype_many_chars("struct") == TT_STRUCT);
+    tassert(ttype_many_chars("while") == TT_WHILE);
+
+    return 0;
+}
+
+int test_ttype_one_char() {
+    testing_func_setup();
+
+    // Use ttype_from_string
+    tassert(ttype_one_char('a') == TT_NO_TOKEN);
+    tassert(ttype_one_char('1') == TT_NO_TOKEN);
+
+    tassert(ttype_one_char('+') == TT_PLUS);
+    tassert(ttype_one_char('-') == TT_MINUS);
+    tassert(ttype_one_char('>') == TT_GREATER);
+    tassert(ttype_one_char('~') == TT_BNOT);
+
+    return 0;
+}
+
+int test_ttype_name() {
+    testing_func_setup();
+
+    tassert(strcmp(ttype_name(TT_LITERAL), "literal") == 0);
+    tassert(strcmp(ttype_name(TT_PLUS), "+") == 0);
+    tassert(strcmp(ttype_name(TT_SIZEOF), "sizeof") == 0);
+    tassert(strcmp(ttype_name(TT_WHILE), "while") == 0);
+
+    return 0;
+}
 
 int test_ttype_from_string() {
     testing_func_setup();

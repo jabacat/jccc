@@ -40,3 +40,9 @@ const char *ttype_name(TokenType tt);
 
 // Test for ttype_from_string
 int test_ttype_from_string();
+
+int test_ttype_many_chars();
+
+int test_ttype_one_char();
+
+int test_ttype_name();
