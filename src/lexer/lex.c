@@ -203,6 +203,7 @@ int skip_to_token(Lexer *l) {
     return -1; // EOF was reached
 }
 
+// This is a function for parsing single char tokens
 TokenType ttype_one_char(char c) {
     switch (c) {
     case '(':
@@ -256,6 +257,7 @@ TokenType ttype_one_char(char c) {
     return TT_NO_TOKEN;
 }
 
+// This is a function for parsing exclusively tokens with more than one char
 TokenType ttype_many_chars(const char *contents) {
     if (STREQ(contents, "auto")) {
         return TT_AUTO;
@@ -423,6 +425,7 @@ TokenType ttype_many_chars(const char *contents) {
     return TT_IDENTIFIER;
 }
 
+// This is the function for parsing all tokens from strings
 TokenType ttype_from_string(const char *contents) {
     int len;
 
