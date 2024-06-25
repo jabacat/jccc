@@ -278,7 +278,8 @@ int skip_to_token(Lexer *l) {
 }
 
 // This is a function for parsing single char tokens
-TokenType _ttype_one_char(char c) {
+// Now handles all cases of single char tokens
+TokenType ttype_one_char(char c) {
     switch (c) {
     case '(':
         return TT_OPAREN; // (
@@ -331,13 +332,16 @@ TokenType _ttype_one_char(char c) {
     case '?':
         return TT_QMARK;
     default:
-        PRINT_ERROR("Token type for token '%c' not recognized", c);
-        return TT_NO_TOKEN;
+		if (isdigit(c)) {
+			return TT_LITERAL;
+		} else {
+			return TT_IDENTIFIER;
+		}
     }
 }
 
 // This is a function for parsing exclusively tokens with more than one char
-TokenType _ttype_many_chars(const char *contents) {
+TokenType ttype_many_chars(const char *contents) {
     if (STREQ(contents, "auto")) {
         return TT_AUTO;
     } else if (STREQ(contents, "break")) {
@@ -514,7 +518,7 @@ TokenType ttype_from_string(const char *contents) {
 
     // Single character contents
     if (len == 1) {
-        TokenType token = _ttype_one_char(contents[0]);
+        TokenType token = ttype_one_char(contents[0]);
 
         if (token != TT_NO_TOKEN) {
             return token;
@@ -618,9 +622,9 @@ const char *ttype_name(TokenType tt) { return ttype_names[tt]; }
 int test_ttype_many_chars() {
     testing_func_setup();
 
-    tassert(_ttype_many_chars("foo") == TT_IDENTIFIER);
-    tassert(_ttype_many_chars("struct") == TT_STRUCT);
-    tassert(_ttype_many_chars("while") == TT_WHILE);
+    tassert(ttype_many_chars("foo") == TT_IDENTIFIER);
+    tassert(ttype_many_chars("struct") == TT_STRUCT);
+    tassert(ttype_many_chars("while") == TT_WHILE);
 
     return 0;
 }
@@ -629,13 +633,13 @@ int test_ttype_one_char() {
     testing_func_setup();
 
     // Use ttype_from_string
-    tassert(_ttype_one_char('a') == TT_NO_TOKEN);
-    tassert(_ttype_one_char('1') == TT_NO_TOKEN);
+    tassert(ttype_one_char('a') == TT_IDENTIFIER);
+    tassert(ttype_one_char('1') == TT_LITERAL);
 
-    tassert(_ttype_one_char('+') == TT_PLUS);
-    tassert(_ttype_one_char('-') == TT_MINUS);
-    tassert(_ttype_one_char('>') == TT_GREATER);
-    tassert(_ttype_one_char('~') == TT_BNOT);
+    tassert(ttype_one_char('+') == TT_PLUS);
+    tassert(ttype_one_char('-') == TT_MINUS);
+    tassert(ttype_one_char('>') == TT_GREATER);
+    tassert(ttype_one_char('~') == TT_BNOT);
 
     return 0;
 }
