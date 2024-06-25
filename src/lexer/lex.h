@@ -23,10 +23,10 @@ int lex(Lexer *l, Token *token);
 int unlex(Lexer *l, Token *token);
 
 // Find token type for single char
-TokenType ttype_one_char(char c);
+TokenType _ttype_one_char(char c);
 
 // Find token type for a char* with multiple characters
-TokenType ttype_many_chars(const char *contents);
+TokenType _ttype_many_chars(const char *contents);
 
 // Discern the token type from the given contents of unknown length
 TokenType ttype_from_string(const char *contents);
