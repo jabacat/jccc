@@ -252,7 +252,9 @@ TokenType ttype_one_char(char c) {
     case '^':
         return TT_XOR; // ^
     case '#':
-        return TT_POUND; // #
+        return TT_POUND;
+    case '?':
+        return TT_QMARK;
     default:
         PRINT_ERROR("Token type for token '%c' not recognized", c);
         return TT_NO_TOKEN;
@@ -368,6 +370,8 @@ TokenType ttype_many_chars(const char *contents) {
         return TT_LEFTSHIFTEQUALS;
     } else if (STREQ(contents, ">>=")) {
         return TT_RIGHTSHIFTEQUALS;
+    } else if (STREQ(contents, "!=")) {
+        return TT_NOTEQ;
     }
 
     // Includes only numbers
