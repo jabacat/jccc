@@ -519,10 +519,7 @@ TokenType ttype_from_string(const char *contents) {
     // Single character contents
     if (len == 1) {
         TokenType token = ttype_one_char(contents[0]);
-
-        if (token != TT_NO_TOKEN) {
-            return token;
-        }
+		return token;
     }
 
     return ttype_many_chars(contents);
