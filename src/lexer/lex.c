@@ -25,10 +25,10 @@ int is_valid_numeric_or_id_char(char c) {
     return isalnum(c) || (c == '_') || (c == '.');
 }
 
-int real_lex(Lexer*, Token*);
+int real_lex(Lexer *, Token *);
 
 /**
- * This produces a list of tokens after having been processed by the 
+ * This produces a list of tokens after having been processed by the
  * preprocessor. For example, if the code is
  * #define MAX_ARRAY 5
  * int arr[MAX_ARRAY];
@@ -40,7 +40,7 @@ int real_lex(Lexer*, Token*);
  * ]
  * ;
  */
-int lex(Lexer* l, Token* t) {
+int lex(Lexer *l, Token *t) {
     // For now, all we need to do is skip newlines
     for (;;) {
         real_lex(l, t);
@@ -530,6 +530,9 @@ const char *ttype_name(TokenType tt) { return ttype_names[tt]; }
 
 int test_ttype_from_string() {
     testing_func_setup();
+
+    tassert(ttype_from_string("+") == TT_PLUS);
+    tassert(ttype_from_string("=") == TT_ASSIGN);
 
     tassert(ttype_from_string("1") == TT_LITERAL);
     tassert(ttype_from_string("1.2") == TT_LITERAL);
