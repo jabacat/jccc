@@ -169,7 +169,7 @@ int real_lex(Lexer *l, Token *t) {
     // First up, we can just end here.
     if (in_string(init, single_char_tokens)) {
         t->length = pos;
-        t->type = ttype_one_char(init);
+        t->type = _ttype_one_char(init);
         return 0;
     }
 
@@ -196,7 +196,7 @@ int real_lex(Lexer *l, Token *t) {
         // We've ended!
         ungetc(c, l->fp);
         t->contents[pos] = '\0';
-        t->type = ttype_many_chars(t->contents);
+        t->type = _ttype_many_chars(t->contents);
         t->length = pos;
         return 0;
     }
@@ -331,7 +331,6 @@ TokenType _ttype_one_char(char c) {
     case '?':
         return TT_QMARK;
     default:
-        PRINT_ERROR("Token type for token '%c' not recognized", c);
         return TT_NO_TOKEN;
     }
 }
@@ -521,7 +520,7 @@ TokenType ttype_from_string(const char *contents) {
         }
     }
 
-    return ttype_many_chars(contents);
+    return _ttype_many_chars(contents);
 }
 
 static const char *ttype_names[] = {
