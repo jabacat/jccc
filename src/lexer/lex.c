@@ -460,8 +460,10 @@ static const char *ttype_names[] = {
     "no token",      // Not a token
     "end of file",   // End-of-file, lex until we hit the end of the file
     "newline",       // Newline, used in preprocessing
+    "pound",
     ".",
     ",",
+    "?",
     "-",
     "+",
     "*",
@@ -493,6 +495,7 @@ static const char *ttype_names[] = {
     "!",
     "~",
     "==",
+    "!=",
     "^",
     "^=",
     "->",
