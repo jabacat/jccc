@@ -322,7 +322,7 @@ TokenType ttype_many_chars(const char *contents) {
         return TT_UNSIGNED;
     } else if (STREQ(contents, "void")) {
         return TT_SIZEOF;
-    } else if (STREQ(contents, "volitile")) {
+    } else if (STREQ(contents, "volatile")) {
         return TT_SIZEOF;
     } else if (STREQ(contents, "while")) {
         return TT_WHILE;
