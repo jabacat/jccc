@@ -18,8 +18,66 @@ int in_string(char c, char s[]) {
     return 0;
 }
 
-// We will need to add more of these later, for sure
-char single_char_tokens[] = "(){}[];~#,.:?";
+char single_char_tokens[] = "(){}[];~#,.:?~";
+
+// All strings which represent operators.
+char* operator_strings[] = {
+    "-",
+    "+",
+    "*",
+    "/",
+    "=",
+    ":",
+    "%",
+    "&",
+    "&&",
+    "|",
+    "||",
+    "-=",
+    "+=",
+    "++",
+    "--",
+    "/=",
+    "*=",
+    "%=",
+    "&=",
+    "|=",
+    "&&=",
+    "||=",
+    ">",
+    "<",
+    "<=",
+    ">=",
+    "<<",
+    ">>",
+    "!",
+    "==",
+    "!=",
+    "^",
+    "^=",
+    "->",
+    "<<=",
+    ">>=",
+    NULL, // for iterating
+};
+
+int starts_operator(char c) {
+    switch (c) {
+    case '-': case '+': case '*': case '/': case '=': case ':': case '%':
+    case '&': case '|': case '<': case '>': case '!': case '~': case '^':
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+int valid_operator_sequence(char* op) {
+    for (char** top = operator_strings; *top; ++top) {
+        if (STREQ(*top, op))
+            return 1;
+    }
+    return 0;
+}
 
 int is_valid_numeric_or_id_char(char c) {
     return isalnum(c) || (c == '_') || (c == '.');
@@ -136,6 +194,22 @@ int real_lex(Lexer *l, Token *t) {
             t->contents[pos++] = c;
         }
         // We've ended!
+        ungetc(c, l->fp);
+        t->contents[pos] = '\0';
+        t->type = ttype_many_chars(t->contents);
+        t->length = pos;
+        return 0;
+    }
+
+    // Lex an operator. We do this by lexing characters from the buffer until
+    // the resulting string is no longer an operator, then we cut our losses and
+    // return./
+    if (starts_operator(init)) {
+        while (valid_operator_sequence(t->contents)) {
+            t->contents[pos++] = getc(l->fp);
+        }
+        // We've ended!
+        // Can we reduce this code duplication from above in a smart way?
         ungetc(c, l->fp);
         t->contents[pos] = '\0';
         t->type = ttype_many_chars(t->contents);
