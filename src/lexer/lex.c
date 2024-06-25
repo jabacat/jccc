@@ -19,7 +19,7 @@ int in_string(char c, char s[]) {
 }
 
 // We will need to add more of these later, for sure
-char single_char_tokens[] = "(){}[];";
+char single_char_tokens[] = "(){}[];~#,.:?";
 
 int is_valid_numeric_or_id_char(char c) {
     return isalnum(c) || (c == '_') || (c == '.');
@@ -251,9 +251,12 @@ TokenType ttype_one_char(char c) {
         return TT_BNOT; // ~
     case '^':
         return TT_XOR; // ^
+    case '#':
+        return TT_POUND; // #
+    default:
+        PRINT_ERROR("Token type for token '%c' not recognized", c);
+        return TT_NO_TOKEN;
     }
-
-    return TT_NO_TOKEN;
 }
 
 TokenType ttype_many_chars(const char *contents) {
