@@ -212,7 +212,7 @@ int real_lex(Lexer *l, Token *t) {
         // Can we reduce this code duplication from above in a smart way?
         ungetc(c, l->fp);
         t->contents[pos - 1] = '\0';
-        t->type = ttype_many_chars(t->contents);
+        t->type = ttype_from_string(t->contents);
         t->length = pos;
         return 0;
     }
