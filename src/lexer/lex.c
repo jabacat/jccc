@@ -1,5 +1,6 @@
 #include "lex.h"
 #include "token.h"
+#include <assert.h>
 #include <stdio.h>
 #include <testing/tassert.h> // tassert
 
@@ -32,7 +33,7 @@ int lexer_getchar(Lexer* l) {
 }
 
 int lexer_ungetchar(Lexer *l) {
-    // if called before getchar ever is this could cause problems
+    assert(l->position >= 0);
     l->position--;
     ungetc(l->buffer[0], l->fp);
     return 1;
