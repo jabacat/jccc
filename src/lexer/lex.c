@@ -83,6 +83,12 @@ int is_valid_numeric_or_id_char(char c) {
     return isalnum(c) || (c == '_') || (c == '.');
 }
 
+int is_valid_string_char(char c, int* type) {
+    type = (c == '\'');
+    type += (c == '"')*2;
+    return (c == '\'') || (c == '"');
+}
+
 int real_lex(Lexer*, Token*);
 
 /**
@@ -218,6 +224,46 @@ int real_lex(Lexer *l, Token *t) {
     }
 
     // TODO - parse character or string literal
+    int c;
+    int *type;
+    if (is_valid_string_char(init, type)) {
+        int open = type;
+        if (type == 1) {
+            c = getc(l->fp);
+            t->contents[pos++] = c;
+            c = getc(l->fp);
+            if (c != '\'') {
+                ungetc(c, l->fp);
+                t->contents[pos] = '\0';
+                t->type = ttype_many_chars(t->contents);
+                t->length = pos;
+                return 0;
+            }
+                
+        } else if (type == 2) {
+            for (;;) {
+                c = getc(l->fp);
+                // If not alphanumeric or underscore, skip to end
+                if (c != '"')
+                    break;
+                // OOB check
+                if (pos >= TOKEN_LENGTH - 1) {
+                    PRINT_ERROR("identifier too long, over %d characters",
+                                TOKEN_LENGTH);
+                    PRINT_ERROR("identifier began with the following:");
+                    PRINT_ERROR("%.*s", TOKEN_LENGTH, t->contents);
+                    return -1;
+                }
+                t->contents[pos++] = c;
+            }
+            // We've ended!
+            ungetc(c, l->fp);
+            t->contents[pos] = '\0';
+            t->type = ttype_many_chars(t->contents);
+            t->length = pos;
+            return 0;
+        }
+    }
 
     return 0;
 }
