@@ -28,13 +28,24 @@ int is_valid_numeric_or_id_char(char c) {
 
 int lexer_getchar(Lexer* l) {
     l->position++;
+    l->last_column = l->column;
     l->buffer[0] = getc(l->fp);
+    if (l->buffer[0] == '\n') {
+        l->line++;
+        l->column = 0;
+    } else {
+        l->column++;
+    }
     return l->buffer[0];
 }
 
 int lexer_ungetchar(Lexer *l) {
     assert(l->position >= 0);
     l->position--;
+    l->column = l->last_column;
+    if (l->buffer[0] == '\n') {
+        l->line--;
+    }
     ungetc(l->buffer[0], l->fp);
     return 1;
 }
@@ -90,7 +101,8 @@ int real_lex(Lexer *l, Token *t) {
         strcpy(t->contents, eof);
         t->length = strlen(eof);
         t->type = TT_EOF;
-        t->position_in_file = l->position;
+        t->line = l->line;
+        t->column = l->column;
         return 0;
     }
 
@@ -107,7 +119,8 @@ int real_lex(Lexer *l, Token *t) {
         strcpy(t->contents, nline);
         t->length = strlen(nline);
         t->type = TT_NEWLINE;
-        t->position_in_file = l->position;
+        t->line = l->line;
+        t->column = l->column;
         return 0;
     }
 
@@ -131,7 +144,8 @@ int real_lex(Lexer *l, Token *t) {
     if (in_string(init, single_char_tokens)) {
         t->length = pos;
         t->type = ttype_one_char(init);
-        t->position_in_file = l->position;
+        t->line = l->line;
+        t->column = l->column;
         return 0;
     }
 
@@ -139,9 +153,11 @@ int real_lex(Lexer *l, Token *t) {
     // If it starts with an alphanumeric character or an underscore, search
     // until we hit something which isn't.
     int c;
-    long starting_pos;
+    int starting_line;
+    int starting_col;
     if (is_valid_numeric_or_id_char(init)) {
-        starting_pos = l->position;
+        starting_line = l->line;
+        starting_col = l->column;
         for (;;) {
             c = lexer_getchar(l);
             // If not alphanumeric or underscore, skip to end
@@ -162,7 +178,8 @@ int real_lex(Lexer *l, Token *t) {
         t->contents[pos] = '\0';
         t->type = ttype_many_chars(t->contents);
         t->length = pos;
-        t->position_in_file = starting_pos;
+        t->line = starting_line;
+        t->column = starting_col;
         return 0;
     }
 

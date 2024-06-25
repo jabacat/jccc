@@ -101,5 +101,6 @@ typedef struct {
     char contents[TOKEN_LENGTH];    // The actual contents of the token.
     unsigned length;                // How long the token is.
     char source_file[TOKEN_LENGTH]; // The source file the token was in.
-    long position_in_file;           // Where in the file the token started, as an index.
+    int line;                       // which line in the file the token was found
+    int column;                     // Where in that line the token was found
 } Token;
