@@ -18,8 +18,66 @@ int in_string(char c, char s[]) {
     return 0;
 }
 
-// We will need to add more of these later, for sure
-char single_char_tokens[] = "(){}[];";
+char single_char_tokens[] = "(){}[];~#,.:?~";
+
+// All strings which represent operators.
+char* operator_strings[] = {
+    "-",
+    "+",
+    "*",
+    "/",
+    "=",
+    ":",
+    "%",
+    "&",
+    "&&",
+    "|",
+    "||",
+    "-=",
+    "+=",
+    "++",
+    "--",
+    "/=",
+    "*=",
+    "%=",
+    "&=",
+    "|=",
+    "&&=",
+    "||=",
+    ">",
+    "<",
+    "<=",
+    ">=",
+    "<<",
+    ">>",
+    "!",
+    "==",
+    "!=",
+    "^",
+    "^=",
+    "->",
+    "<<=",
+    ">>=",
+    NULL, // for iterating
+};
+
+int starts_operator(char c) {
+    switch (c) {
+    case '-': case '+': case '*': case '/': case '=': case ':': case '%':
+    case '&': case '|': case '<': case '>': case '!': case '~': case '^':
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+int valid_operator_sequence(char* op) {
+    for (char** top = operator_strings; *top; ++top) {
+        if (STREQ(*top, op))
+            return 1;
+    }
+    return 0;
+}
 
 int is_valid_numeric_or_id_char(char c) {
     return isalnum(c) || (c == '_') || (c == '.');
@@ -143,6 +201,22 @@ int real_lex(Lexer *l, Token *t) {
         return 0;
     }
 
+    // Lex an operator. We do this by lexing characters from the buffer until
+    // the resulting string is no longer an operator, then we cut our losses and
+    // return./
+    if (starts_operator(init)) {
+        while (valid_operator_sequence(t->contents)) {
+            t->contents[pos++] = (c = getc(l->fp));
+        }
+        // We've ended!
+        // Can we reduce this code duplication from above in a smart way?
+        ungetc(c, l->fp);
+        t->contents[pos - 1] = '\0';
+        t->type = ttype_from_string(t->contents);
+        t->length = pos;
+        return 0;
+    }
+
     // TODO - parse character or string literal
 
     return 0;
@@ -251,9 +325,14 @@ TokenType ttype_one_char(char c) {
         return TT_BNOT; // ~
     case '^':
         return TT_XOR; // ^
+    case '#':
+        return TT_POUND;
+    case '?':
+        return TT_QMARK;
+    default:
+        PRINT_ERROR("Token type for token '%c' not recognized", c);
+        return TT_NO_TOKEN;
     }
-
-    return TT_NO_TOKEN;
 }
 
 TokenType ttype_many_chars(const char *contents) {
@@ -316,9 +395,9 @@ TokenType ttype_many_chars(const char *contents) {
     } else if (STREQ(contents, "unsigned")) {
         return TT_UNSIGNED;
     } else if (STREQ(contents, "void")) {
-        return TT_SIZEOF;
-    } else if (STREQ(contents, "volitile")) {
-        return TT_SIZEOF;
+        return TT_VOID;
+    } else if (STREQ(contents, "volatile")) {
+        return TT_VOLATILE;
     } else if (STREQ(contents, "while")) {
         return TT_WHILE;
     } else if (STREQ(contents, "&&")) {
@@ -365,6 +444,8 @@ TokenType ttype_many_chars(const char *contents) {
         return TT_LEFTSHIFTEQUALS;
     } else if (STREQ(contents, ">>=")) {
         return TT_RIGHTSHIFTEQUALS;
+    } else if (STREQ(contents, "!=")) {
+        return TT_NOTEQ;
     }
 
     // Includes only numbers
@@ -453,8 +534,10 @@ static const char *ttype_names[] = {
     "no token",      // Not a token
     "end of file",   // End-of-file, lex until we hit the end of the file
     "newline",       // Newline, used in preprocessing
+    "pound",
     ".",
     ",",
+    "?",
     "-",
     "+",
     "*",
@@ -486,6 +569,7 @@ static const char *ttype_names[] = {
     "!",
     "~",
     "==",
+    "!=",
     "^",
     "^=",
     "->",
@@ -522,7 +606,7 @@ static const char *ttype_names[] = {
     "unsigned",
     "union",
     "void",
-    "volitile",
+    "volatile",
     "while",
 };
 
