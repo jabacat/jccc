@@ -321,9 +321,9 @@ TokenType ttype_many_chars(const char *contents) {
     } else if (STREQ(contents, "unsigned")) {
         return TT_UNSIGNED;
     } else if (STREQ(contents, "void")) {
-        return TT_SIZEOF;
+        return TT_VOID;
     } else if (STREQ(contents, "volatile")) {
-        return TT_SIZEOF;
+        return TT_VOLATILE;
     } else if (STREQ(contents, "while")) {
         return TT_WHILE;
     } else if (STREQ(contents, "&&")) {
