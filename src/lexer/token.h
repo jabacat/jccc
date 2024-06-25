@@ -19,9 +19,11 @@ typedef enum {
     TT_NO_TOKEN,   // Not a token
     TT_EOF,     // End-of-file, so we can lex until we hit the end of the file
     TT_NEWLINE, // Newline, used in preprocessing
+    TT_POUND,      // # for preprocessing
 
     TT_PERIOD,           // .
     TT_COMMA,            // ,
+    TT_QMARK,            // ?
     TT_MINUS,            // -
     TT_PLUS,             // +
     TT_STAR,             // *
@@ -53,6 +55,7 @@ typedef enum {
     TT_LNOT,             // !
     TT_BNOT,             // ~
     TT_EQUALS,           // ==
+    TT_NOTEQ,            // !=
     TT_XOR,              // ^
     TT_XOREQ,            // ^=
     TT_POINT,            // ->
