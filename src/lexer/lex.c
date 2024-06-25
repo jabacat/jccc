@@ -259,6 +259,10 @@ TokenType ttype_one_char(char c) {
 
 // This is a function for parsing exclusively tokens with more than one char
 TokenType ttype_many_chars(const char *contents) {
+	if (strlen(contents) == 1) {
+        PRINT_ERROR("Please use ttype_from_string instead of ttype_many_chars for general use of tokenizing");
+	}
+
     if (STREQ(contents, "auto")) {
         return TT_AUTO;
     } else if (STREQ(contents, "break")) {
