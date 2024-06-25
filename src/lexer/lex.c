@@ -532,7 +532,7 @@ static const char *ttype_names[] = {
     "unsigned",
     "union",
     "void",
-    "volitile",
+    "volatile",
     "while",
 };
 
