@@ -1,4 +1,7 @@
 #include "lex.h"
+#include "token.h"
+#include <assert.h>
+#include <stdio.h>
 #include <testing/tassert.h> // tassert
 #include <testing/test_utils.h>
 
@@ -83,7 +86,31 @@ int is_valid_numeric_or_id_char(char c) {
     return isalnum(c) || (c == '_') || (c == '.');
 }
 
-int real_lex(Lexer *, Token *);
+int lexer_getchar(Lexer* l) {
+    l->position++;
+    l->last_column = l->column;
+    l->buffer[0] = getc(l->fp);
+    if (l->buffer[0] == '\n') {
+        l->line++;
+        l->column = 0;
+    } else {
+        l->column++;
+    }
+    return l->buffer[0];
+}
+
+int lexer_ungetchar(Lexer *l) {
+    assert(l->position >= 0);
+    l->position--;
+    l->column = l->last_column;
+    if (l->buffer[0] == '\n') {
+        l->line--;
+    }
+    ungetc(l->buffer[0], l->fp);
+    return 1;
+}
+
+int real_lex(Lexer*, Token*);
 
 /**
  * This produces a list of tokens after having been processed by the
@@ -120,10 +147,13 @@ int real_lex(Lexer *l, Token *t) {
 
     skip_to_token(l);
     // Get initial character
-    int init = getc(l->fp);
+    int init = lexer_getchar(l);
 
     // Clear memory and initialize
     memset(t->contents, 0, TOKEN_LENGTH);
+
+    // Set sourcefile
+    memcpy(t->source_file, &l->current_file, TOKEN_LENGTH);
 
     // First important check -- have we reached the end of the file?
     static char eof[] = "[end of file]";
@@ -131,6 +161,8 @@ int real_lex(Lexer *l, Token *t) {
         strcpy(t->contents, eof);
         t->length = strlen(eof);
         t->type = TT_EOF;
+        t->line = l->line;
+        t->column = l->column;
         return 0;
     }
 
@@ -147,6 +179,8 @@ int real_lex(Lexer *l, Token *t) {
         strcpy(t->contents, nline);
         t->length = strlen(nline);
         t->type = TT_NEWLINE;
+        t->line = l->line;
+        t->column = l->column;
         return 0;
     }
 
@@ -170,6 +204,8 @@ int real_lex(Lexer *l, Token *t) {
     if (in_string(init, single_char_tokens)) {
         t->length = pos;
         t->type = ttype_one_char(init);
+        t->line = l->line;
+        t->column = l->column;
         return 0;
     }
 
@@ -177,9 +213,13 @@ int real_lex(Lexer *l, Token *t) {
     // If it starts with an alphanumeric character or an underscore, search
     // until we hit something which isn't.
     int c;
+    int starting_line;
+    int starting_col;
     if (is_valid_numeric_or_id_char(init)) {
+        starting_line = l->line;
+        starting_col = l->column;
         for (;;) {
-            c = getc(l->fp);
+            c = lexer_getchar(l);
             // If not alphanumeric or underscore, skip to end
             if (!is_valid_numeric_or_id_char(c))
                 break;
@@ -194,10 +234,12 @@ int real_lex(Lexer *l, Token *t) {
             t->contents[pos++] = c;
         }
         // We've ended!
-        ungetc(c, l->fp);
+        lexer_ungetchar(l);
         t->contents[pos] = '\0';
         t->type = ttype_many_chars(t->contents);
         t->length = pos;
+        t->line = starting_line;
+        t->column = starting_col;
         return 0;
     }
 
@@ -219,6 +261,7 @@ int real_lex(Lexer *l, Token *t) {
 
     // TODO - parse character or string literal
 
+    PRINT_ERROR("lexer unable to identify token starting with: %c", init);
     return 0;
 }
 
@@ -239,10 +282,10 @@ int skip_to_token(Lexer *l) {
     int in_block = 0, pass = 0;
 
     // Read the first character
-    if ((cur = fgetc(l->fp)) != EOF) {
+    if ((cur = lexer_getchar(l)) != EOF) {
         prev = cur;
         if (!(cur == ' ' || cur == '\t' || cur == '/')) {
-            fseek(l->fp, -1, SEEK_CUR);
+            lexer_ungetchar(l);
             return 0; // Token begins immediately
         }
     } else {
@@ -250,7 +293,7 @@ int skip_to_token(Lexer *l) {
     }
 
     // Read each character from the file until EOF
-    while ((cur = fgetc(l->fp)) != EOF) {
+    while ((cur = lexer_getchar(l)) != EOF) {
         if (cur == '/' && prev == '/' && in_block == 0) {
             in_block = 1; // Single line comment
         } else if (cur == '*' && prev == '/' && in_block == 0) {
@@ -261,12 +304,11 @@ int skip_to_token(Lexer *l) {
             in_block = 0; // Out of comment
         } else if (prev == '/' && !(cur == '*' || cur == '/') &&
                    in_block == 0) {
-            fseek(l->fp, -1, SEEK_CUR);
+            lexer_ungetchar(l);
             return 0; // Token was a slash without a * or / following it
         }
-
         if (!(cur == ' ' || cur == '\t' || cur == '/') && in_block == 0) {
-            fseek(l->fp, -1, SEEK_CUR);
+            lexer_ungetchar(l);
             return 0; // Token is next
         }
 
