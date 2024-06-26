@@ -28,7 +28,7 @@ typedef struct {
 typedef struct {
     // TODO -- add parameters whe we get there
     BlockStatement body;
-    const char name[256]; // The actual name of the function.
+    char name[256]; // The actual name of the function.
 } FunctionDeclaration;
 
 // An entire program is just a list of top level declarations.
@@ -44,14 +44,14 @@ typedef struct {
 // Right now, a function call doesn't have any parameters so it's just the name
 // of the function being called.
 typedef struct {
-    const char name[256];
+    char name[256];
 } FunctionCall;
 
 // An expression for now is an integer or a function call.
 typedef struct {
     union {
         FunctionCall fc;
-        const char literal[256];
+        char literal[256];
     } u;
     NodeType type;
 } Expression;
