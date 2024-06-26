@@ -123,3 +123,15 @@ int ladd_element(List* l, void* element) {
     }
     return 0;
 }
+
+int literate(List* l, int (*fn)(void*)) {
+    ListBlock* lb = l->head;
+    int acc = 0;
+    while (lb != NULL) {
+        for (int i = 0; i < lb->full; ++i) {
+            acc += fn(lb->array[i]);
+        }
+        lb = lb->next;
+    }
+    return acc;
+}
