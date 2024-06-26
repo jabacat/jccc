@@ -4,12 +4,20 @@
 	(
 	)
 	{
-	return
-	0
+	int
+	a
+	=
+	100
 	;
-	}
+	return
+	a
+	*
+	5
+	;
 	[end of file]
 */
+
 int main() {
-	return 0;
+	int a = 100;
+	return a * 5;
 }

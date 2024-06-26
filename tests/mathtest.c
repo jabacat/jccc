@@ -5,11 +5,17 @@
 	)
 	{
 	return
-	0
+	(
+	100
+	*
+	4
+	)
+	+
+	3
 	;
-	}
 	[end of file]
 */
+
 int main() {
-	return 0;
+	return (100 * 4) + 3;
 }

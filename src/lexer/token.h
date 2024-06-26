@@ -19,9 +19,11 @@ typedef enum {
     TT_NO_TOKEN,   // Not a token
     TT_EOF,     // End-of-file, so we can lex until we hit the end of the file
     TT_NEWLINE, // Newline, used in preprocessing
+    TT_POUND,      // # for preprocessing
 
     TT_PERIOD,           // .
     TT_COMMA,            // ,
+    TT_QMARK,            // ?
     TT_MINUS,            // -
     TT_PLUS,             // +
     TT_STAR,             // *
@@ -53,6 +55,7 @@ typedef enum {
     TT_LNOT,             // !
     TT_BNOT,             // ~
     TT_EQUALS,           // ==
+    TT_NOTEQ,            // !=
     TT_XOR,              // ^
     TT_XOREQ,            // ^=
     TT_POINT,            // ->
@@ -97,7 +100,10 @@ typedef enum {
 #define TOKEN_LENGTH 256
 
 typedef struct {
-    TokenType type;              // What type of token this is.
-    char contents[TOKEN_LENGTH]; // The actual contents of the token.
-    unsigned length;             // How long the token is.
+    TokenType type;                 // What type of token this is.
+    char contents[TOKEN_LENGTH];    // The actual contents of the token.
+    unsigned length;                // How long the token is.
+    char source_file[TOKEN_LENGTH]; // The source file the token was in.
+    int line;                       // which line in the file the token was found
+    int column;                     // Where in that line the token was found
 } Token;

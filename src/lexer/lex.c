@@ -1,5 +1,9 @@
 #include "lex.h"
+#include "token.h"
+#include <assert.h>
+#include <stdio.h>
 #include <testing/tassert.h> // tassert
+#include <testing/test_utils.h>
 
 #include <ctype.h>
 #include <string.h> // memcpy
@@ -17,14 +21,122 @@ int in_string(char c, char s[]) {
     return 0;
 }
 
-// We will need to add more of these later, for sure
-char single_char_tokens[] = "(){}[];";
+char single_char_tokens[] = "(){}[];~#,.:?~";
+
+// All strings which represent operators.
+char* operator_strings[] = {
+    "-",
+    "+",
+    "*",
+    "/",
+    "=",
+    ":",
+    "%",
+    "&",
+    "&&",
+    "|",
+    "||",
+    "-=",
+    "+=",
+    "++",
+    "--",
+    "/=",
+    "*=",
+    "%=",
+    "&=",
+    "|=",
+    "&&=",
+    "||=",
+    ">",
+    "<",
+    "<=",
+    ">=",
+    "<<",
+    ">>",
+    "!",
+    "==",
+    "!=",
+    "^",
+    "^=",
+    "->",
+    "<<=",
+    ">>=",
+    NULL, // for iterating
+};
+
+int starts_operator(char c) {
+    switch (c) {
+    case '-': case '+': case '*': case '/': case '=': case ':': case '%':
+    case '&': case '|': case '<': case '>': case '!': case '~': case '^':
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+int valid_operator_sequence(char* op) {
+    for (char** top = operator_strings; *top; ++top) {
+        if (STREQ(*top, op))
+            return 1;
+    }
+    return 0;
+}
 
 int is_valid_numeric_or_id_char(char c) {
     return isalnum(c) || (c == '_') || (c == '.');
 }
 
+int lexer_getchar(Lexer* l) {
+    l->position++;
+    l->last_column = l->column;
+    l->buffer[0] = getc(l->fp);
+    if (l->buffer[0] == '\n') {
+        l->line++;
+        l->column = 0;
+    } else {
+        l->column++;
+    }
+    return l->buffer[0];
+}
+
+int lexer_ungetchar(Lexer *l) {
+    assert(l->position >= 0);
+    l->position--;
+    l->column = l->last_column;
+    if (l->buffer[0] == '\n') {
+        l->line--;
+    }
+    ungetc(l->buffer[0], l->fp);
+    return 1;
+}
+
+int real_lex(Lexer*, Token*);
+
+/**
+ * This produces a list of tokens after having been processed by the
+ * preprocessor. For example, if the code is
+ * #define MAX_ARRAY 5
+ * int arr[MAX_ARRAY];
+ * then this function will return
+ * int
+ * arr
+ * [
+ * 5
+ * ]
+ * ;
+ */
 int lex(Lexer *l, Token *t) {
+    // For now, all we need to do is skip newlines
+    for (;;) {
+        real_lex(l, t);
+        if (t->type != TT_NEWLINE)
+            break;
+    }
+    return 0;
+}
+
+// This actually grabs the next token, independent of any preprocessor things.
+int real_lex(Lexer *l, Token *t) {
     // If there are any tokens waiting in the putback buffer, read from there
     // instead.
     if (l->unlexed_count > 0) {
@@ -35,10 +147,13 @@ int lex(Lexer *l, Token *t) {
 
     skip_to_token(l);
     // Get initial character
-    int init = getc(l->fp);
+    int init = lexer_getchar(l);
 
     // Clear memory and initialize
     memset(t->contents, 0, TOKEN_LENGTH);
+
+    // Set sourcefile
+    memcpy(t->source_file, &l->current_file, TOKEN_LENGTH);
 
     // First important check -- have we reached the end of the file?
     static char eof[] = "[end of file]";
@@ -46,6 +161,8 @@ int lex(Lexer *l, Token *t) {
         strcpy(t->contents, eof);
         t->length = strlen(eof);
         t->type = TT_EOF;
+        t->line = l->line;
+        t->column = l->column;
         return 0;
     }
 
@@ -62,6 +179,8 @@ int lex(Lexer *l, Token *t) {
         strcpy(t->contents, nline);
         t->length = strlen(nline);
         t->type = TT_NEWLINE;
+        t->line = l->line;
+        t->column = l->column;
         return 0;
     }
 
@@ -85,6 +204,8 @@ int lex(Lexer *l, Token *t) {
     if (in_string(init, single_char_tokens)) {
         t->length = pos;
         t->type = ttype_one_char(init);
+        t->line = l->line;
+        t->column = l->column;
         return 0;
     }
 
@@ -92,9 +213,13 @@ int lex(Lexer *l, Token *t) {
     // If it starts with an alphanumeric character or an underscore, search
     // until we hit something which isn't.
     int c;
+    int starting_line;
+    int starting_col;
     if (is_valid_numeric_or_id_char(init)) {
+        starting_line = l->line;
+        starting_col = l->column;
         for (;;) {
-            c = getc(l->fp);
+            c = lexer_getchar(l);
             // If not alphanumeric or underscore, skip to end
             if (!is_valid_numeric_or_id_char(c))
                 break;
@@ -109,15 +234,34 @@ int lex(Lexer *l, Token *t) {
             t->contents[pos++] = c;
         }
         // We've ended!
-        ungetc(c, l->fp);
+        lexer_ungetchar(l);
         t->contents[pos] = '\0';
         t->type = ttype_many_chars(t->contents);
+        t->length = pos;
+        t->line = starting_line;
+        t->column = starting_col;
+        return 0;
+    }
+
+    // Lex an operator. We do this by lexing characters from the buffer until
+    // the resulting string is no longer an operator, then we cut our losses and
+    // return./
+    if (starts_operator(init)) {
+        while (valid_operator_sequence(t->contents)) {
+            t->contents[pos++] = (c = getc(l->fp));
+        }
+        // We've ended!
+        // Can we reduce this code duplication from above in a smart way?
+        ungetc(c, l->fp);
+        t->contents[pos - 1] = '\0';
+        t->type = ttype_from_string(t->contents);
         t->length = pos;
         return 0;
     }
 
     // TODO - parse character or string literal
 
+    PRINT_ERROR("lexer unable to identify token starting with: %c", init);
     return 0;
 }
 
@@ -138,10 +282,10 @@ int skip_to_token(Lexer *l) {
     int in_block = 0, pass = 0;
 
     // Read the first character
-    if ((cur = fgetc(l->fp)) != EOF) {
+    if ((cur = lexer_getchar(l)) != EOF) {
         prev = cur;
         if (!(cur == ' ' || cur == '\t' || cur == '/')) {
-            fseek(l->fp, -1, SEEK_CUR);
+            lexer_ungetchar(l);
             return 0; // Token begins immediately
         }
     } else {
@@ -149,7 +293,7 @@ int skip_to_token(Lexer *l) {
     }
 
     // Read each character from the file until EOF
-    while ((cur = fgetc(l->fp)) != EOF) {
+    while ((cur = lexer_getchar(l)) != EOF) {
         if (cur == '/' && prev == '/' && in_block == 0) {
             in_block = 1; // Single line comment
         } else if (cur == '*' && prev == '/' && in_block == 0) {
@@ -160,12 +304,11 @@ int skip_to_token(Lexer *l) {
             in_block = 0; // Out of comment
         } else if (prev == '/' && !(cur == '*' || cur == '/') &&
                    in_block == 0) {
-            fseek(l->fp, -1, SEEK_CUR);
+            lexer_ungetchar(l);
             return 0; // Token was a slash without a * or / following it
         }
-
         if (!(cur == ' ' || cur == '\t' || cur == '/') && in_block == 0) {
-            fseek(l->fp, -1, SEEK_CUR);
+            lexer_ungetchar(l);
             return 0; // Token is next
         }
 
@@ -176,6 +319,8 @@ int skip_to_token(Lexer *l) {
     return -1; // EOF was reached
 }
 
+// This is a function for parsing single char tokens
+// Now handles all cases of single char tokens
 TokenType ttype_one_char(char c) {
     switch (c) {
     case '(':
@@ -224,11 +369,20 @@ TokenType ttype_one_char(char c) {
         return TT_BNOT; // ~
     case '^':
         return TT_XOR; // ^
+    case '#':
+        return TT_POUND;
+    case '?':
+        return TT_QMARK;
+    default:
+		if (isdigit(c)) {
+			return TT_LITERAL;
+		} else {
+			return TT_IDENTIFIER;
+		}
     }
-
-    return TT_NO_TOKEN;
 }
 
+// This is a function for parsing exclusively tokens with more than one char
 TokenType ttype_many_chars(const char *contents) {
     if (STREQ(contents, "auto")) {
         return TT_AUTO;
@@ -289,9 +443,9 @@ TokenType ttype_many_chars(const char *contents) {
     } else if (STREQ(contents, "unsigned")) {
         return TT_UNSIGNED;
     } else if (STREQ(contents, "void")) {
-        return TT_SIZEOF;
-    } else if (STREQ(contents, "volitile")) {
-        return TT_SIZEOF;
+        return TT_VOID;
+    } else if (STREQ(contents, "volatile")) {
+        return TT_VOLATILE;
     } else if (STREQ(contents, "while")) {
         return TT_WHILE;
     } else if (STREQ(contents, "&&")) {
@@ -338,6 +492,8 @@ TokenType ttype_many_chars(const char *contents) {
         return TT_LEFTSHIFTEQUALS;
     } else if (STREQ(contents, ">>=")) {
         return TT_RIGHTSHIFTEQUALS;
+    } else if (STREQ(contents, "!=")) {
+        return TT_NOTEQ;
     }
 
     // Includes only numbers
@@ -396,6 +552,7 @@ TokenType ttype_many_chars(const char *contents) {
     return TT_IDENTIFIER;
 }
 
+// This is the function for parsing all tokens from strings
 TokenType ttype_from_string(const char *contents) {
     int len;
 
@@ -404,10 +561,7 @@ TokenType ttype_from_string(const char *contents) {
     // Single character contents
     if (len == 1) {
         TokenType token = ttype_one_char(contents[0]);
-
-        if (token != TT_NO_TOKEN) {
-            return token;
-        }
+		return token;
     }
 
     return ttype_many_chars(contents);
@@ -426,8 +580,10 @@ static const char *ttype_names[] = {
     "no token",      // Not a token
     "end of file",   // End-of-file, lex until we hit the end of the file
     "newline",       // Newline, used in preprocessing
+    "pound",
     ".",
     ",",
+    "?",
     "-",
     "+",
     "*",
@@ -459,6 +615,7 @@ static const char *ttype_names[] = {
     "!",
     "~",
     "==",
+    "!=",
     "^",
     "^=",
     "->",
@@ -495,13 +652,54 @@ static const char *ttype_names[] = {
     "unsigned",
     "union",
     "void",
-    "volitile",
+    "volatile",
     "while",
 };
 
 const char *ttype_name(TokenType tt) { return ttype_names[tt]; }
 
+int test_ttype_many_chars() {
+    testing_func_setup();
+
+    tassert(ttype_many_chars("foo") == TT_IDENTIFIER);
+    tassert(ttype_many_chars("struct") == TT_STRUCT);
+    tassert(ttype_many_chars("while") == TT_WHILE);
+
+    return 0;
+}
+
+int test_ttype_one_char() {
+    testing_func_setup();
+
+    // Use ttype_from_string
+    tassert(ttype_one_char('a') == TT_IDENTIFIER);
+    tassert(ttype_one_char('1') == TT_LITERAL);
+
+    tassert(ttype_one_char('+') == TT_PLUS);
+    tassert(ttype_one_char('-') == TT_MINUS);
+    tassert(ttype_one_char('>') == TT_GREATER);
+    tassert(ttype_one_char('~') == TT_BNOT);
+
+    return 0;
+}
+
+int test_ttype_name() {
+    testing_func_setup();
+
+    tassert(strcmp(ttype_name(TT_LITERAL), "literal") == 0);
+    tassert(strcmp(ttype_name(TT_PLUS), "+") == 0);
+    tassert(strcmp(ttype_name(TT_SIZEOF), "sizeof") == 0);
+    tassert(strcmp(ttype_name(TT_WHILE), "while") == 0);
+
+    return 0;
+}
+
 int test_ttype_from_string() {
+    testing_func_setup();
+
+    tassert(ttype_from_string("+") == TT_PLUS);
+    tassert(ttype_from_string("=") == TT_ASSIGN);
+
     tassert(ttype_from_string("1") == TT_LITERAL);
     tassert(ttype_from_string("1.2") == TT_LITERAL);
 

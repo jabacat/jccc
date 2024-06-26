@@ -1,3 +1,5 @@
+#pragma once
+
 #include <assert.h>
 
 #define tassert(e) ((void)((e) ? 0 : __assert(#e, __FILE__, __LINE__)))
