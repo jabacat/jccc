@@ -248,11 +248,11 @@ int real_lex(Lexer *l, Token *t) {
     // return./
     if (starts_operator(init)) {
         while (valid_operator_sequence(t->contents)) {
-            t->contents[pos++] = (c = getc(l->fp));
+            t->contents[pos++] = (c = lexer_getchar(l->fp));
         }
         // We've ended!
         // Can we reduce this code duplication from above in a smart way?
-        ungetc(c, l->fp);
+        lexer_ungetchar(l);
         t->contents[pos - 1] = '\0';
         t->type = ttype_from_string(t->contents);
         t->length = pos;
