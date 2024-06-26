@@ -113,7 +113,7 @@ int lexer_ungetchar(Lexer *l) {
 int real_lex(Lexer*, Token*);
 
 /**
- * This produces a list of tokens after having been processed by the 
+ * This produces a list of tokens after having been processed by the
  * preprocessor. For example, if the code is
  * #define MAX_ARRAY 5
  * int arr[MAX_ARRAY];
@@ -125,7 +125,7 @@ int real_lex(Lexer*, Token*);
  * ]
  * ;
  */
-int lex(Lexer* l, Token* t) {
+int lex(Lexer *l, Token *t) {
     // For now, all we need to do is skip newlines
     for (;;) {
         real_lex(l, t);
@@ -319,6 +319,8 @@ int skip_to_token(Lexer *l) {
     return -1; // EOF was reached
 }
 
+// This is a function for parsing single char tokens
+// Now handles all cases of single char tokens
 TokenType ttype_one_char(char c) {
     switch (c) {
     case '(':
@@ -372,11 +374,15 @@ TokenType ttype_one_char(char c) {
     case '?':
         return TT_QMARK;
     default:
-        PRINT_ERROR("Token type for token '%c' not recognized", c);
-        return TT_NO_TOKEN;
+		if (isdigit(c)) {
+			return TT_LITERAL;
+		} else {
+			return TT_IDENTIFIER;
+		}
     }
 }
 
+// This is a function for parsing exclusively tokens with more than one char
 TokenType ttype_many_chars(const char *contents) {
     if (STREQ(contents, "auto")) {
         return TT_AUTO;
@@ -546,6 +552,7 @@ TokenType ttype_many_chars(const char *contents) {
     return TT_IDENTIFIER;
 }
 
+// This is the function for parsing all tokens from strings
 TokenType ttype_from_string(const char *contents) {
     int len;
 
@@ -554,10 +561,7 @@ TokenType ttype_from_string(const char *contents) {
     // Single character contents
     if (len == 1) {
         TokenType token = ttype_one_char(contents[0]);
-
-        if (token != TT_NO_TOKEN) {
-            return token;
-        }
+		return token;
     }
 
     return ttype_many_chars(contents);
@@ -654,8 +658,47 @@ static const char *ttype_names[] = {
 
 const char *ttype_name(TokenType tt) { return ttype_names[tt]; }
 
+int test_ttype_many_chars() {
+    testing_func_setup();
+
+    tassert(ttype_many_chars("foo") == TT_IDENTIFIER);
+    tassert(ttype_many_chars("struct") == TT_STRUCT);
+    tassert(ttype_many_chars("while") == TT_WHILE);
+
+    return 0;
+}
+
+int test_ttype_one_char() {
+    testing_func_setup();
+
+    // Use ttype_from_string
+    tassert(ttype_one_char('a') == TT_IDENTIFIER);
+    tassert(ttype_one_char('1') == TT_LITERAL);
+
+    tassert(ttype_one_char('+') == TT_PLUS);
+    tassert(ttype_one_char('-') == TT_MINUS);
+    tassert(ttype_one_char('>') == TT_GREATER);
+    tassert(ttype_one_char('~') == TT_BNOT);
+
+    return 0;
+}
+
+int test_ttype_name() {
+    testing_func_setup();
+
+    tassert(strcmp(ttype_name(TT_LITERAL), "literal") == 0);
+    tassert(strcmp(ttype_name(TT_PLUS), "+") == 0);
+    tassert(strcmp(ttype_name(TT_SIZEOF), "sizeof") == 0);
+    tassert(strcmp(ttype_name(TT_WHILE), "while") == 0);
+
+    return 0;
+}
+
 int test_ttype_from_string() {
     testing_func_setup();
+
+    tassert(ttype_from_string("+") == TT_PLUS);
+    tassert(ttype_from_string("=") == TT_ASSIGN);
 
     tassert(ttype_from_string("1") == TT_LITERAL);
     tassert(ttype_from_string("1.2") == TT_LITERAL);
