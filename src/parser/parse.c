@@ -7,6 +7,7 @@
 #include <lexer/token.h>
 #include <stdlib.h> // calloc
 #include <string.h> // strcmp
+#include <ctype.h> // isdigit
 #include <util/out.h>
 
 int parse(const char *filename) {
@@ -58,18 +59,18 @@ int parse(const char *filename) {
 
             // Return value
             if (tokens[5].type == TT_RETURN && tokens[6].type == TT_LITERAL &&
-                tokens[7].type == TT_SEMI) {
+                isdigit(tokens[6].contents[0]) && tokens[7].type == TT_SEMI) {
 
                 // Correct matched closed brace
                 if (tokens[8].type == TT_CBRACE) {
-					printf("\n");
-					
-					// Generate preamble main code
+                    printf("\n");
+
+                    // Generate preamble main code
                     char *code_start = start_main();
 
-					printf(code_start);
+                    printf(code_start);
 
-					// Add custom return code
+                    // Add custom return code
                     char *code_end =
                         end_main_custom_return(atoi(tokens[6].contents));
 
@@ -87,6 +88,8 @@ int parse(const char *filename) {
     } else {
         PRINT_ERROR("Not correct main function.\n");
     }
+
+    fclose(fp);
 
     return 0;
 }

@@ -31,6 +31,8 @@ int lexer_dump(const char *filename) {
                ttype_name(t.type), t.line, t.column);
     } while (t.type != TT_EOF);
 
+	fclose(fp);
+
     return 0;
 }
 
