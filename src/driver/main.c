@@ -19,12 +19,13 @@ int lexer_dump(const char* filename) {
     }
     lexer.fp = fp;
     lexer.unlexed_count = 0;
+    lexer.column = lexer.line = 1;
 
     Token t;
     do {
         // Return if some non-zero (error) code is returned
         if (lex(&lexer, &t)) return 1;
-        printf("Contents: %20s, type: %20s\n", t.contents, ttype_name(t.type));
+        printf("Contents: %20s, type: %20s, position: %d/%d\n", t.contents, ttype_name(t.type), t.line, t.column);
     } while (t.type != TT_EOF);
 
     return 0;
