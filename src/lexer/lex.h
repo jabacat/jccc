@@ -11,6 +11,12 @@
 // the state of a lexer.
 typedef struct {
     FILE *fp; // The file we are reading from.
+    char current_file[TOKEN_LENGTH]; // The name of source file we are reading from.
+    char buffer[1]; // A buffer so that chars can be "put back"
+    long position; // The posistion of the file pointer in the current file in characters from the start
+    int last_column;
+    int column; // The number of characters down whichever line its on
+    int line; // The number of lines it has passed so far
     Token unlexed[TOKEN_PUTBACKS];
     unsigned unlexed_count;
 } Lexer;
@@ -18,6 +24,13 @@ typedef struct {
 // Takes an open file pointer, and a token as input. It fills the token struct
 // with the next available token from the file.
 int lex(Lexer *l, Token *token);
+
+// Wrapper for getc. Takes a lexer pointer and returns the next character in the file its holding onto.
+// Updates position and stream
+int lexer_getchar(Lexer *l);
+
+// Wrapper for ungetc. Takes a lexer pointer and back-tracks 1 character using the lexer buffer. Updates position
+int lexer_ungetchar(Lexer *l);
 
 // Put a token back to be lexed again in the future.
 int unlex(Lexer *l, Token *token);
