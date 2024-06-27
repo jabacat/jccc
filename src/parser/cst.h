@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "list.h"
+#include <util/list.h>
 
 // A list of all node types.
 typedef enum {

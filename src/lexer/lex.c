@@ -248,7 +248,7 @@ int real_lex(Lexer *l, Token *t) {
     // return./
     if (starts_operator(init)) {
         while (valid_operator_sequence(t->contents)) {
-            t->contents[pos++] = (c = lexer_getchar(l->fp));
+            t->contents[pos++] = (c = lexer_getchar(l));
         }
         // We've ended!
         // Can we reduce this code duplication from above in a smart way?
