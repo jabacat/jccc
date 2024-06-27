@@ -8,6 +8,8 @@ char *end_main();
 
 char *start_func();
 
+char *end_main_custom_return(int val);
+
 char *end_func();
 
 char *init_int_literal(int val);

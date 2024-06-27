@@ -6,13 +6,14 @@
 #include <string.h> // strcmp
 
 #include <lexer/lex.h>
+#include <parser/parse.h>
 #include <util/out.h>
 
-int lexer_dump(const char* filename) {
+int lexer_dump(const char *filename) {
 
     // Initialization of everything
     Lexer lexer;
-    FILE * fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, "r");
     if (!fp) {
         PRINT_ERROR("File %s not found", filename);
         return 1;
@@ -24,12 +25,15 @@ int lexer_dump(const char* filename) {
     Token t;
     do {
         // Return if some non-zero (error) code is returned
-        if (lex(&lexer, &t)) return 1;
-        printf("Contents: %20s, type: %20s, position: %d/%d\n", t.contents, ttype_name(t.type), t.line, t.column);
+        if (lex(&lexer, &t))
+            return 1;
+        printf("Contents: %20s, type: %20s, position: %d/%d\n", t.contents,
+               ttype_name(t.type), t.line, t.column);
     } while (t.type != TT_EOF);
 
-    return 0;
+	fclose(fp);
 
+    return 0;
 }
 
 int main(int argc, char **argv) {
@@ -38,14 +42,16 @@ int main(int argc, char **argv) {
 
     // Skip the name of the executable.
     --argc, ++argv;
-    
+
     if (argc == 0) {
         PRINT_DEFAULT("Usage: --token-dump <filename> to see all tokens");
         return 0;
     }
 
     if (argc == 1) {
-        PRINT_DEFAULT("default compilation not supported yet -- try 'jccc --token-dump %s' instead.", argv[0]);
+        PRINT_DEFAULT("default compilation not supported yet -- try 'jccc "
+                      "--token-dump %s' instead.",
+                      argv[0]);
         return 1;
     }
 
@@ -55,13 +61,14 @@ int main(int argc, char **argv) {
     }
 
     // Two arguments now.
-    if (strcmp(argv[0], "--token-dump")) {
-        PRINT_ERROR("option %s not recognized.", argv[1]);
-        return 1;
-    }
+    if (strcmp(argv[0], "--token-dump") == 0) {
+        // Finally, we can do the lexer test properly!
+        return lexer_dump(argv[1]);
+    } else if (strcmp(argv[0], "--test-parse") == 0) {
+		parse(argv[1]);
+		return 0;
+	}
 
-    // Finally, we can do the lexer test properly!
-    return lexer_dump(argv[1]);
-
-    return 0;
+	PRINT_ERROR("option %s not recognized.", argv[1]);
+	return 1;
 }
