@@ -2,6 +2,8 @@
 
 #include <testing/test_utils.h>
 
+enum Op { ADD };
+
 char *start_main();
 
 char *end_main();
