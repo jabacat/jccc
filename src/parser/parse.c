@@ -2,12 +2,14 @@
  *
  */
 
-#include <codegen/x86/codegen.h>
-#include <lexer/lex.h>
-#include <lexer/token.h>
 #include <stdlib.h> // calloc
 #include <string.h> // strcmp
 #include <ctype.h> // isdigit
+
+#include <codegen/x86/codegen.h>
+#include <lexer/lex.h>
+#include <lexer/token.h>
+#include <parser/cst.h>
 #include <util/out.h>
 
 int parse(const char *filename) {
@@ -95,3 +97,30 @@ int parse(const char *filename) {
 }
 
 int parse_simple_main_func() {}
+
+/**
+ * Proper parsing code below -- producing a concrete syntax tree from a file.
+ * Each of these functions will probably reference the others numerous times.
+ */
+
+int parse_expr(Lexer* l, Expression* ex) {
+    // TODO (just a literal or a function call for now).
+}
+
+int parse_funccall(Lexer* l, Expression* ex) {
+    // TODO
+}
+
+int parse_blockstmt(Lexer* l, BlockStatement* bs) {
+    // TODO
+}
+
+int parse_funcdecl(Lexer* l, FunctionDeclaration* fd) {
+    // TODO
+}
+
+// Parse function -- takes a lexer and produces a concrete syntax tree. Fill the
+// struct which we have given with the data.
+int make_cst(Lexer* l, ConcreteFileTree* tree) {
+    // TODO
+}
