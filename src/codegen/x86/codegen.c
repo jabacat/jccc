@@ -46,6 +46,14 @@ char *end_main_custom_return(int val) {
     return end;
 }
 
+char* op_on_n(int n, enum Op op) {
+    char *end;
+    end = (char *)malloc(256 * sizeof(char));
+    sprintf(end, "	mov rax, 60\n	mov rdi, %d\n	syscall\n", n);
+
+    return end;
+}
+
 char *start_func() {
     static char start[256] = "\
 	sub rsp, 32\
