@@ -46,10 +46,15 @@ char *end_main_custom_return(int val) {
     return end;
 }
 
-char* op_on_n(int n, enum Op op) {
+static char *op_strs[4] = {"add", "sub", "mov"};
+
+char *op_on_rax_with_rdi(enum Op op) {
     char *end;
     end = (char *)malloc(256 * sizeof(char));
-    sprintf(end, "	mov rax, 60\n	mov rdi, %d\n	syscall\n", n);
+
+    char *op_str = op_strs[op];
+
+    sprintf(end, "	%s rax, rdi\n", op_str);
 
     return end;
 }
@@ -91,6 +96,18 @@ int test_init_int_literal() {
     code_gen_init();
 
     tassert(strcmp(init_int_literal(100), "	mov [rsp+8], 100") == 0);
+
+    return 0;
+}
+
+int test_op_on_rax_with_rdi() {
+    testing_func_setup();
+
+    char *out = op_on_rax_with_rdi(ADD);
+    tassert(strcmp(out, "	add rax, rdi\n") == 0);
+
+    char *out2 = op_on_rax_with_rdi(MOV);
+    tassert(strcmp(out2, "	mov rax, rdi\n") == 0);
 
     return 0;
 }

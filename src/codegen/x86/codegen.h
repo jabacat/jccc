@@ -2,7 +2,7 @@
 
 #include <testing/test_utils.h>
 
-enum Op { ADD };
+enum Op { ADD, SUB, MOV };
 
 char *start_main();
 
@@ -17,3 +17,5 @@ char *end_func();
 char *init_int_literal(int val);
 
 int test_init_int_literal();
+
+int test_op_on_rax_with_rdi();
