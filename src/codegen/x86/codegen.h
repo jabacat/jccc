@@ -2,7 +2,9 @@
 
 #include <testing/test_utils.h>
 
-enum Op { ADD, SUB, MOV };
+enum Op { OP_ADD, OP_SUB, OP_MOV, OP_NOP };
+
+enum Op ttype_to_op(TokenType t);
 
 char *start_main();
 

@@ -5,6 +5,7 @@
 
 #include "codegen.h"
 
+#include <lexer/token.h>
 #include <testing/tassert.h> // tassert
 
 struct GenState {
@@ -17,6 +18,17 @@ struct GenState {
 void code_gen_init() {
     GEN_STATE.registers_in_use = 0;
     GEN_STATE.rsp_offset = 0;
+}
+
+enum Op ttype_to_op(TokenType t) {
+    switch (t) {
+    case TT_PLUS:
+        return OP_ADD;
+    case TT_MINUS:
+        return OP_SUB;
+	default:
+		return OP_NOP;
+    }
 }
 
 char *start_main() {
@@ -103,10 +115,10 @@ int test_init_int_literal() {
 int test_op_on_rax_with_rdi() {
     testing_func_setup();
 
-    char *out = op_on_rax_with_rdi(ADD);
+    char *out = op_on_rax_with_rdi(OP_ADD);
     tassert(strcmp(out, "	add rax, rdi\n") == 0);
 
-    char *out2 = op_on_rax_with_rdi(MOV);
+    char *out2 = op_on_rax_with_rdi(OP_MOV);
     tassert(strcmp(out2, "	mov rax, rdi\n") == 0);
 
     return 0;
