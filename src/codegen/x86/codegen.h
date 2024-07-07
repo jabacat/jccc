@@ -1,5 +1,6 @@
 #pragma once
 
+#include <lexer/token.h>
 #include <testing/test_utils.h>
 
 enum Op { OP_ADD, OP_SUB, OP_MOV, OP_NOP };
