@@ -2,15 +2,15 @@
 #include "token.h"
 #include <assert.h>
 #include <stdio.h>
-#include <testing/tassert.h> // tassert
-#include <testing/test_utils.h>
+#include "../testing/tassert.h" // tassert
+#include "../testing/test_utils.h"
 
 #include <ctype.h>
 #include <string.h> // memcpy
 
 #define STREQ(a, b) (!strcmp((a), (b)))
 
-#include <util/out.h> // error reporting
+#include "../util/out.h" // error reporting
 
 // Is a character in the given string?
 int in_string(char c, char s[]) {

@@ -3,7 +3,7 @@
  */
 
 #include "lex.h"
-#include <testing/test_utils.h>
+#include "../testing/test_utils.h"
 
 int test_lexer() {
     testing_module_setup();

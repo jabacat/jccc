@@ -5,7 +5,7 @@
 
 #include "codegen.h"
 
-#include <testing/tassert.h> // tassert
+#include "../../testing/tassert.h" // tassert
 
 struct GenState {
     // Each bit corresponds with a registers 0-31 where the LSB is 0

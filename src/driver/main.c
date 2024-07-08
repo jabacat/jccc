@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <string.h> // strcmp
 
-#include <lexer/lex.h>
-#include <util/out.h>
+#include "../lexer/lex.h"
+#include "../util/out.h"
 
 int lexer_dump(const char* filename) {
 

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <util/out.h>
+#include "../util/out.h"
 
 void testing_setup_internal(const char *func_name) {
     printf("Running tests from ");

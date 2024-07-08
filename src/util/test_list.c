@@ -1,9 +1,11 @@
 #include "test_list.h"
-#include <testing/tassert.h>
-#include <testing/test_utils.h>
+#include "../testing/tassert.h"
+#include "../testing/test_utils.h"
 
 // A particular application I want to test out.
 int basic_100_test() {
+    testing_func_setup();
+    
     static int BS = 10, TS = 100;
     List* l = create_list(BS);
     if (!l) return 0;

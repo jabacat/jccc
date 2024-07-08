@@ -5,6 +5,6 @@
 #pragma once
 
 #include "codegen.h"
-#include <testing/test_utils.h>
+#include "../../testing/test_utils.h"
 
 int test_x86();
