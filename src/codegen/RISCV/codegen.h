@@ -1,3 +1,3 @@
-// Possibility later
+void r_code_gen_init();
 
-#pragma once
+char *r_start_main();

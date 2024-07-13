@@ -5,6 +5,7 @@
 
 #include "codegen.h"
 
+#include <lexer/token.h>
 #include <testing/tassert.h> // tassert
 
 struct GenState {
@@ -17,6 +18,17 @@ struct GenState {
 void code_gen_init() {
     GEN_STATE.registers_in_use = 0;
     GEN_STATE.rsp_offset = 0;
+}
+
+enum Op ttype_to_op(TokenType t) {
+    switch (t) {
+    case TT_PLUS:
+        return OP_ADD;
+    case TT_MINUS:
+        return OP_SUB;
+	default:
+		return OP_NOP;
+    }
 }
 
 char *start_main() {
@@ -42,6 +54,19 @@ char *end_main_custom_return(int val) {
     char *end;
     end = (char *)malloc(256 * sizeof(char));
     sprintf(end, "	mov rax, 60\n	mov rdi, %d\n	syscall\n", val);
+
+    return end;
+}
+
+static char *op_strs[4] = {"add", "sub", "mov"};
+
+char *op_on_rax_with_rdi(enum Op op) {
+    char *end;
+    end = (char *)malloc(256 * sizeof(char));
+
+    char *op_str = op_strs[op];
+
+    sprintf(end, "	%s rax, rdi\n", op_str);
 
     return end;
 }
@@ -83,6 +108,18 @@ int test_init_int_literal() {
     code_gen_init();
 
     tassert(strcmp(init_int_literal(100), "	mov [rsp+8], 100") == 0);
+
+    return 0;
+}
+
+int test_op_on_rax_with_rdi() {
+    testing_func_setup();
+
+    char *out = op_on_rax_with_rdi(OP_ADD);
+    tassert(strcmp(out, "	add rax, rdi\n") == 0);
+
+    char *out2 = op_on_rax_with_rdi(OP_MOV);
+    tassert(strcmp(out2, "	mov rax, rdi\n") == 0);
 
     return 0;
 }
