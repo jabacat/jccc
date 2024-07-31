@@ -24,6 +24,11 @@ struct Hashmap *create_hashmap(int capacity) {
     return h;
 }
 
+void destroy_hashmap(struct Hashmap *h) {
+    free(h->buckets);
+    free(h);
+}
+
 struct BucketNode *create_bucket(void *key, void *value) {
     struct BucketNode *b = malloc(sizeof(struct BucketNode));
 

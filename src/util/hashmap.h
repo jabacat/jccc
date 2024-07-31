@@ -14,6 +14,8 @@ struct Hashmap {
 };
 
 struct Hashmap *create_hashmap(int capacity);
+void destroy_hashmap(struct Hashmap *h);
+
 struct BucketNode *create_bucket(void *key, void *value);
 
 // Get a value with a key
