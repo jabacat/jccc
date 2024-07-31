@@ -13,6 +13,7 @@ struct Hashmap {
     unsigned (*equals)(void *, void *);
 };
 
+struct Hashmap *create_hashmap(int capacity);
 struct BucketNode *create_bucket(void *key, void *value);
 
 // Get a value with a key
