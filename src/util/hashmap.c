@@ -1,15 +1,16 @@
 #include "hashmap.h"
 #include <stdlib.h>
 
-unsigned fnva1(char* value) {
-	unsigned long long h = 14695981039346656037;
-	long int prime = 1099511628211;
+unsigned fnva1(char *value) {
+    unsigned long long h = 14695981039346656037;
+    long int prime = 1099511628211;
 
-	while (value) {
-		h ^= prime;
-		(*value)++;
-	}
+    while (value) {
+        h ^= prime;
+        (*value)++;
+    }
 
+    return h;
 }
 
 struct Hashmap *create_hashmap(int capacity) {
