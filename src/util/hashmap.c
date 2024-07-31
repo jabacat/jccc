@@ -1,5 +1,9 @@
 #include "hashmap.h"
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
+#include <testing/tassert.h>
+#include <testing/test_utils.h>
 
 unsigned fnva1(char *value) {
     unsigned long long h = 14695981039346656037;
@@ -55,7 +59,7 @@ struct BucketNode *hm_get(struct Hashmap *h, void *key) {
     return NULL;
 }
 
-void hm_set(struct Hashmap *h, void *key, void *value) {
+int hm_set(struct Hashmap *h, void *key, void *value) {
     unsigned a = h->hash(key) % h->cap;
 
     struct BucketNode *b = h->buckets[a];
@@ -64,8 +68,11 @@ void hm_set(struct Hashmap *h, void *key, void *value) {
         h->buckets[a]->key = key;
         h->buckets[a]->value = value;
         h->buckets[a]->next = NULL;
+
+        return 0;
     } else {
         // Handle chaining
+        return -1;
     }
 }
 
@@ -74,4 +81,49 @@ void double_cap(struct Hashmap *h) {
 
     h->size = 0;
     h->cap = h->cap * 2;
+}
+
+int test_hash_init() {
+    testing_func_setup();
+    struct Hashmap *h = create_hashmap(100);
+
+    tassert(h->size == 0);
+    tassert(h->cap == 100);
+}
+
+int test_hash_init_and_store() {
+    testing_func_setup();
+    struct Hashmap *h = create_hashmap(100);
+
+    tassert(h->size == 0);
+    tassert(h->cap == 100);
+
+    char name[100] = "jake";
+
+    char key[10] = "test";
+    int ret = hm_set(h, key, name);
+    tassert(ret != -1);
+
+    uint64_t ind = h->hash(key) % h->cap;
+    struct BucketNode *b = h->buckets[ind];
+    tassert(strcmp(b->key, key) == 0);
+
+    tassert(h->size == 1);
+    tassert(h->cap == 100);
+}
+
+int test_hash_set_and_get() {
+    testing_func_setup();
+    struct Hashmap *h = create_hashmap(100);
+
+    char name[100] = "jake";
+    char key[10] = "test";
+
+    int ret = hm_set(h, key, name);
+    tassert(ret != -1);
+
+    struct BucketNode *got = hm_get(h, "test");
+    tassert(strcmp(got->value, "jake") == 0);
+
+    return 0;
 }
