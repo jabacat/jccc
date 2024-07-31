@@ -34,8 +34,39 @@ struct BucketNode *create_bucket(void *key, void *value) {
     return b;
 }
 
-struct BucketNode *hm_get(void *key);
+struct BucketNode *hm_get(struct Hashmap *h, void *key) {
+    unsigned a = h->hash(key) % h->cap;
 
-void hm_set(void *key, void *value);
+    struct BucketNode *b = h->buckets[a];
+    if (b != NULL) {
 
-void double_cap();
+        // Check if key is the same, because the hash might have collided
+        while (!h->equals(key, b->key)) {
+            b = b->next;
+        }
+        return b;
+    }
+
+    return NULL;
+}
+
+void hm_set(struct Hashmap *h, void *key, void *value) {
+    unsigned a = h->hash(key) % h->cap;
+
+    struct BucketNode *b = h->buckets[a];
+    if (b == NULL) {
+        h->buckets[a] = malloc(sizeof(struct BucketNode *));
+        h->buckets[a]->key = key;
+        h->buckets[a]->value = value;
+        h->buckets[a]->next = NULL;
+    } else {
+        // Handle chaining
+    }
+}
+
+void double_cap(struct Hashmap *h) {
+    h->buckets = realloc(h->buckets, h->cap * 2 * sizeof(struct BucketNode *));
+
+    h->size = 0;
+    h->cap = h->cap * 2;
+}
