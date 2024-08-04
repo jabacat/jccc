@@ -1,21 +1,25 @@
 #include "hashmap.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <testing/tassert.h>
 #include <testing/test_utils.h>
 
 unsigned fnva1(char *value) {
-    unsigned long long h = 14695981039346656037;
-    long int prime = 1099511628211;
+    unsigned long h = 16777619;
+    long int prime = 2166136261;
 
-    while (value) {
-        h ^= prime;
-        (*value)++;
+    while (*value != '\0') {
+        h ^= *value;
+        h *= prime;
+        ++value;
     }
 
     return h;
 }
+
+unsigned equal_key(char *a, char *b) { return strcmp(a, b) == 0; }
 
 struct Hashmap *create_hashmap(int capacity) {
     struct Hashmap *h = malloc(sizeof(struct Hashmap));
@@ -26,6 +30,7 @@ struct Hashmap *create_hashmap(int capacity) {
     h->cap = capacity;
 
     h->hash = fnva1;
+    h->equals = equal_key;
 
     return h;
 }
@@ -35,7 +40,7 @@ void destroy_hashmap(struct Hashmap *h) {
     free(h);
 }
 
-struct BucketNode *create_bucket(void *key, void *value) {
+struct BucketNode *create_bucket(char *key, void *value) {
     struct BucketNode *b = malloc(sizeof(struct BucketNode));
 
     b->key = key;
@@ -45,27 +50,36 @@ struct BucketNode *create_bucket(void *key, void *value) {
     return b;
 }
 
-struct BucketNode *hm_get(struct Hashmap *h, void *key) {
+struct BucketNode *hm_get(struct Hashmap *h, char *key) {
     unsigned a = h->hash(key) % h->cap;
 
     struct BucketNode *b = h->buckets[a];
-    if (b != NULL) {
 
-        // Check if key is the same, because the hash might have collided
-        while (!h->equals(key, b->key)) {
-            b = b->next;
-        }
+    if (b == NULL) {
+        return NULL;
+    }
+
+    if (h->equals(b->key, key)) {
         return b;
     }
+
+    // check for linear probing
 
     return NULL;
 }
 
-int hm_set(struct Hashmap *h, void *key, void *value) {
+int hm_set(struct Hashmap *h, char *key, void *value) {
     unsigned a = h->hash(key) % h->cap;
 
     struct BucketNode *b = h->buckets[a];
+
     if (b == NULL) {
+        if (h->size == h->cap) {
+            double_cap(h);
+        }
+
+        h->size++;
+
         h->buckets[a] = malloc(sizeof(struct BucketNode *));
         h->buckets[a]->key = key;
         h->buckets[a]->value = value;
@@ -73,12 +87,14 @@ int hm_set(struct Hashmap *h, void *key, void *value) {
 
         return 0;
     } else {
-        // Handle chaining
+        // Handle linear probing
         return -1;
     }
 }
 
 void double_cap(struct Hashmap *h) {
+    // TODO: rehash all the old elements
+    // They will be in the wrong spot after this
     h->buckets = realloc(h->buckets, h->cap * 2 * sizeof(struct BucketNode *));
 
     h->size = 0;
@@ -100,9 +116,9 @@ int test_hash_init_and_store() {
     tassert(h->size == 0);
     tassert(h->cap == 100);
 
-    char name[100] = "jake";
+    char name[5] = "jake";
 
-    char key[10] = "test";
+    char key[5] = "test";
     int ret = hm_set(h, key, name);
     tassert(ret != -1);
 
