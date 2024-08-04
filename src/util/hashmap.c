@@ -25,6 +25,8 @@ struct Hashmap *create_hashmap(int capacity) {
     h->size = 0;
     h->cap = capacity;
 
+    h->hash = fnva1;
+
     return h;
 }
 

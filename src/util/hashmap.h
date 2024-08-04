@@ -1,5 +1,5 @@
 struct BucketNode {
-    void *key;
+    char *key;
     void *value;
     struct BucketNode *next;
 };
@@ -9,8 +9,8 @@ struct Hashmap {
     int size;
     int cap;
 
-    unsigned (*hash)(void *);
-    unsigned (*equals)(void *, void *);
+    unsigned (*hash)(char *);
+    unsigned (*equals)(char *, char *);
 };
 
 struct Hashmap *create_hashmap(int capacity);
