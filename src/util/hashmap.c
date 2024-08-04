@@ -93,11 +93,20 @@ int hm_set(struct Hashmap *h, char *key, void *value) {
 }
 
 void double_cap(struct Hashmap *h) {
-    // TODO: rehash all the old elements
-    // They will be in the wrong spot after this
-    h->buckets = realloc(h->buckets, h->cap * 2 * sizeof(struct BucketNode *));
+    struct BucketNode **new_buckets =
+        calloc(h->cap * 2, sizeof(struct BucketNode *));
 
-    h->size = 0;
+    for (int i = 0; i < h->cap; i++) {
+
+        if (h->buckets[i] != NULL) {
+            struct BucketNode *b = h->buckets[i];
+            unsigned a = h->hash(b->key) % h->cap;
+            new_buckets[a] = b;
+        }
+    }
+
+    h->buckets = new_buckets;
+
     h->cap = h->cap * 2;
 }
 
@@ -139,6 +148,24 @@ int test_hash_set_and_get() {
 
     int ret = hm_set(h, key, name);
     tassert(ret != -1);
+
+    struct BucketNode *got = hm_get(h, "test");
+    tassert(strcmp(got->value, "jake") == 0);
+
+    return 0;
+}
+
+int test_hash_set_and_double_get() {
+    testing_func_setup();
+    struct Hashmap *h = create_hashmap(100);
+
+    char name[100] = "jake";
+    char key[10] = "test";
+
+    int ret = hm_set(h, key, name);
+    tassert(ret != -1);
+
+    double_cap(h);
 
     struct BucketNode *got = hm_get(h, "test");
     tassert(strcmp(got->value, "jake") == 0);

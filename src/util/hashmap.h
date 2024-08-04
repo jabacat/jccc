@@ -29,3 +29,4 @@ void double_cap(struct Hashmap *h);
 int test_hash_init();
 int test_hash_init_and_store();
 int test_hash_set_and_get();
+int test_hash_set_and_double_get();
