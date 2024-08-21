@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <testing/tassert.h> // tassert
 #include <testing/test_utils.h>
+#include <util/hashmap.h>
 
 #include <ctype.h>
+#include <stdint.h>
 #include <string.h> // memcpy
 
 #define STREQ(a, b) (!strcmp((a), (b)))
@@ -24,58 +26,37 @@ int in_string(char c, char s[]) {
 char single_char_tokens[] = "(){}[];~#,.:?~";
 
 // All strings which represent operators.
-char* operator_strings[] = {
-    "-",
-    "+",
-    "*",
-    "/",
-    "=",
-    ":",
-    "%",
-    "&",
-    "&&",
-    "|",
-    "||",
-    "-=",
-    "+=",
-    "++",
-    "--",
-    "/=",
-    "*=",
-    "%=",
-    "&=",
-    "|=",
-    "&&=",
-    "||=",
-    ">",
-    "<",
-    "<=",
-    ">=",
-    "<<",
-    ">>",
-    "!",
-    "==",
-    "!=",
-    "^",
-    "^=",
-    "->",
-    "<<=",
-    ">>=",
+char *operator_strings[] = {
+    "-",  "+",  "*",  "/",  "=",  ":",  "%",  "&",  "&&",  "|",   "||",  "-=",
+    "+=", "++", "--", "/=", "*=", "%=", "&=", "|=", "&&=", "||=", ">",   "<",
+    "<=", ">=", "<<", ">>", "!",  "==", "!=", "^",  "^=",  "->",  "<<=", ">>=",
     NULL, // for iterating
 };
 
 int starts_operator(char c) {
     switch (c) {
-    case '-': case '+': case '*': case '/': case '=': case ':': case '%':
-    case '&': case '|': case '<': case '>': case '!': case '~': case '^':
+    case '-':
+    case '+':
+    case '*':
+    case '/':
+    case '=':
+    case ':':
+    case '%':
+    case '&':
+    case '|':
+    case '<':
+    case '>':
+    case '!':
+    case '~':
+    case '^':
         return 1;
     default:
         return 0;
     }
 }
 
-int valid_operator_sequence(char* op) {
-    for (char** top = operator_strings; *top; ++top) {
+int valid_operator_sequence(char *op) {
+    for (char **top = operator_strings; *top; ++top) {
         if (STREQ(*top, op))
             return 1;
     }
@@ -86,7 +67,7 @@ int is_valid_numeric_or_id_char(char c) {
     return isalnum(c) || (c == '_') || (c == '.');
 }
 
-int lexer_getchar(Lexer* l) {
+int lexer_getchar(Lexer *l) {
     l->position++;
     l->last_column = l->column;
     l->buffer[0] = getc(l->fp);
@@ -110,7 +91,7 @@ int lexer_ungetchar(Lexer *l) {
     return 1;
 }
 
-int real_lex(Lexer*, Token*);
+int real_lex(Lexer *, Token *);
 
 /**
  * This produces a list of tokens after having been processed by the
@@ -374,126 +355,123 @@ TokenType ttype_one_char(char c) {
     case '?':
         return TT_QMARK;
     default:
-		if (isdigit(c)) {
-			return TT_LITERAL;
-		} else {
-			return TT_IDENTIFIER;
-		}
+        if (isdigit(c)) {
+            return TT_LITERAL;
+        } else {
+            return TT_IDENTIFIER;
+        }
     }
 }
 
+char *keyword_and_operator_strings[] = {
+    "auto",     "break",   "continue", "const", "case",   "char",     "do",
+    "double",   "default", "enum",     "else",  "extern", "float",    "for",
+    "goto",     "int",     "if",       "long",  "return", "register", "struct",
+    "signed",   "sizeof",  "static",   "short", "switch", "typedef",  "union",
+    "unsigned", "void",    "volatile", "while", "&&",     "||",       "-=",
+    "+=",       "++",      "--",       "/=",    "*=",     "%=",       "&=",
+    "|=",       "&&=",     "||=",      "<=",    ">=",     "<<",       ">>",
+    "==",       "^=",      "->",       "<<=",   ">>=",    "!=",
+};
+
+TokenType keyword_token_types[] = {
+    TT_AUTO,
+    TT_BREAK,
+    TT_CONTINUE,
+    TT_CONST,
+    TT_CASE,
+    TT_CHAR,
+    TT_DO,
+    TT_DOUBLE,
+    TT_DEFAULT,
+    TT_ENUM,
+    TT_ELSE,
+    TT_EXTERN,
+    TT_FLOAT,
+    TT_FOR,
+    TT_GOTO,
+    TT_INT,
+    TT_IF,
+    TT_LONG,
+    TT_RETURN,
+    TT_REGISTER,
+    TT_STRUCT,
+    TT_SIGNED,
+    TT_SIZEOF,
+    TT_STATIC,
+    TT_SHORT,
+    TT_SWITCH,
+    TT_TYPEDEF,
+    TT_UNION,
+    TT_UNSIGNED,
+    TT_VOID,
+    TT_VOLATILE,
+    TT_WHILE,
+    TT_LAND,
+    TT_LOR,
+    TT_DEC,
+    TT_INC,
+    TT_PLUSPLUS,
+    TT_MINUSMINUS,
+    TT_DIVEQ,
+    TT_MULEQ,
+    TT_MODEQ,
+    TT_BANDEQ,
+    TT_BOREQ,
+    TT_LANDEQ,
+    TT_LOREQ,
+    TT_LESSEQ,
+    TT_GREATEREQ,
+    TT_LEFTSHIFT,
+    TT_RIGHTSHIFT,
+    TT_EQUALS,
+    TT_XOREQ,
+    TT_POINT,
+    TT_LEFTSHIFTEQUALS,
+    TT_RIGHTSHIFTEQUALS,
+    TT_NOTEQ,
+};
+
+unsigned int perfect_keyword_hash_function(char *keyword) {
+    // (ord(key[0]) + ord(key[1]) * 2 + ord(key[-1]) + ord(key[-2]) ** 2) % 406
+    int len = strlen(keyword);
+
+    if (keyword == NULL) {
+        return -1;
+    }
+
+    int a = (keyword[0] + keyword[1] * 2 + keyword[len - 1] +
+             keyword[len - 2] * keyword[len - 2]) %
+            406;
+}
+
+struct Hashmap *init_keyword_hashmap() {
+    struct Hashmap *h = create_hashmap(406);
+    h->hash = perfect_keyword_hash_function;
+
+    for (int i = 0; i < 55; ++i) {
+        char *keyword = keyword_and_operator_strings[i];
+        int ret = hm_set(h, keyword, (void *)(uintptr_t)keyword_token_types[i]);
+        struct BucketNode *b = hm_get(h, keyword);
+
+        assert((TokenType)(uintptr_t)b->value == keyword_token_types[i]);
+    }
+
+    return h;
+}
+
+struct Hashmap *KEYWORD_HASHMAP = NULL;
+
 // This is a function for parsing exclusively tokens with more than one char
 TokenType ttype_many_chars(const char *contents) {
-    if (STREQ(contents, "auto")) {
-        return TT_AUTO;
-    } else if (STREQ(contents, "break")) {
-        return TT_BREAK;
-    } else if (STREQ(contents, "continue")) {
-        return TT_CONTINUE;
-    } else if (STREQ(contents, "const")) {
-        return TT_CONST;
-    } else if (STREQ(contents, "case")) {
-        return TT_CASE;
-    } else if (STREQ(contents, "char")) {
-        return TT_CHAR;
-    } else if (STREQ(contents, "do")) {
-        return TT_DO;
-    } else if (STREQ(contents, "double")) {
-        return TT_DOUBLE;
-    } else if (STREQ(contents, "default")) {
-        return TT_DEFAULT;
-    } else if (STREQ(contents, "enum")) {
-        return TT_ENUM;
-    } else if (STREQ(contents, "else")) {
-        return TT_ELSE;
-    } else if (STREQ(contents, "extern")) {
-        return TT_EXTERN;
-    } else if (STREQ(contents, "float")) {
-        return TT_FLOAT;
-    } else if (STREQ(contents, "for")) {
-        return TT_FOR;
-    } else if (STREQ(contents, "goto")) {
-        return TT_GOTO;
-    } else if (STREQ(contents, "int")) {
-        return TT_INT;
-    } else if (STREQ(contents, "if")) {
-        return TT_IF;
-    } else if (STREQ(contents, "long")) {
-        return TT_LONG;
-    } else if (STREQ(contents, "return")) {
-        return TT_RETURN;
-    } else if (STREQ(contents, "register")) {
-        return TT_REGISTER;
-    } else if (STREQ(contents, "struct")) {
-        return TT_STRUCT;
-    } else if (STREQ(contents, "signed")) {
-        return TT_SIGNED;
-    } else if (STREQ(contents, "sizeof")) {
-        return TT_SIZEOF;
-    } else if (STREQ(contents, "static")) {
-        return TT_STATIC;
-    } else if (STREQ(contents, "short")) {
-        return TT_SHORT;
-    } else if (STREQ(contents, "switch")) {
-        return TT_SWITCH;
-    } else if (STREQ(contents, "typedef")) {
-        return TT_TYPEDEF;
-    } else if (STREQ(contents, "union")) {
-        return TT_UNION;
-    } else if (STREQ(contents, "unsigned")) {
-        return TT_UNSIGNED;
-    } else if (STREQ(contents, "void")) {
-        return TT_VOID;
-    } else if (STREQ(contents, "volatile")) {
-        return TT_VOLATILE;
-    } else if (STREQ(contents, "while")) {
-        return TT_WHILE;
-    } else if (STREQ(contents, "&&")) {
-        return TT_LAND;
-    } else if (STREQ(contents, "||")) {
-        return TT_LOR;
-    } else if (STREQ(contents, "-=")) {
-        return TT_DEC;
-    } else if (STREQ(contents, "+=")) {
-        return TT_INC;
-    } else if (STREQ(contents, "++")) {
-        return TT_PLUSPLUS;
-    } else if (STREQ(contents, "--")) {
-        return TT_MINUSMINUS;
-    } else if (STREQ(contents, "/=")) {
-        return TT_DIVEQ;
-    } else if (STREQ(contents, "*=")) {
-        return TT_MULEQ;
-    } else if (STREQ(contents, "%=")) {
-        return TT_MODEQ;
-    } else if (STREQ(contents, "&=")) {
-        return TT_BANDEQ;
-    } else if (STREQ(contents, "|=")) {
-        return TT_BOREQ;
-    } else if (STREQ(contents, "&&=")) {
-        return TT_LANDEQ;
-    } else if (STREQ(contents, "||=")) {
-        return TT_LOREQ;
-    } else if (STREQ(contents, "<=")) {
-        return TT_LESSEQ;
-    } else if (STREQ(contents, ">=")) {
-        return TT_GREATEREQ;
-    } else if (STREQ(contents, "<<")) {
-        return TT_LEFTSHIFT;
-    } else if (STREQ(contents, ">>")) {
-        return TT_RIGHTSHIFT;
-    } else if (STREQ(contents, "==")) {
-        return TT_EQUALS;
-    } else if (STREQ(contents, "^=")) {
-        return TT_XOREQ;
-    } else if (STREQ(contents, "->")) {
-        return TT_POINT;
-    } else if (STREQ(contents, "<<=")) {
-        return TT_LEFTSHIFTEQUALS;
-    } else if (STREQ(contents, ">>=")) {
-        return TT_RIGHTSHIFTEQUALS;
-    } else if (STREQ(contents, "!=")) {
-        return TT_NOTEQ;
+    if (KEYWORD_HASHMAP == NULL) {
+        KEYWORD_HASHMAP = init_keyword_hashmap();
+    }
+
+    struct BucketNode *b = hm_get(KEYWORD_HASHMAP, contents);
+    if (b != NULL) {
+        assert(b->key == contents);
+        return (TokenType)(uintptr_t)b->value;
     }
 
     // Includes only numbers
@@ -561,7 +539,7 @@ TokenType ttype_from_string(const char *contents) {
     // Single character contents
     if (len == 1) {
         TokenType token = ttype_one_char(contents[0]);
-		return token;
+        return token;
     }
 
     return ttype_many_chars(contents);
@@ -658,6 +636,14 @@ static const char *ttype_names[] = {
 
 const char *ttype_name(TokenType tt) { return ttype_names[tt]; }
 
+int test_keyword_hash() {
+    testing_func_setup();
+
+    struct Hashmap *h = init_keyword_hashmap();
+
+    return 0;
+}
+
 int test_ttype_many_chars() {
     testing_func_setup();
 
@@ -686,8 +672,12 @@ int test_ttype_one_char() {
 int test_ttype_name() {
     testing_func_setup();
 
+    tassert(strcmp(ttype_name(TT_CHAR), "char") == 0);
+    tassert(strcmp(ttype_name(TT_FOR), "for") == 0);
     tassert(strcmp(ttype_name(TT_LITERAL), "literal") == 0);
     tassert(strcmp(ttype_name(TT_PLUS), "+") == 0);
+    tassert(strcmp(ttype_name(TT_STRUCT), "struct") == 0);
+    tassert(strcmp(ttype_name(TT_VOLATILE), "volatile") == 0);
     tassert(strcmp(ttype_name(TT_SIZEOF), "sizeof") == 0);
     tassert(strcmp(ttype_name(TT_WHILE), "while") == 0);
 

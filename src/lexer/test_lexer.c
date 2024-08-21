@@ -8,6 +8,7 @@
 int test_lexer() {
     testing_module_setup();
 
+	test_keyword_hash();
     test_ttype_name();
     test_ttype_from_string();
     test_ttype_many_chars();
